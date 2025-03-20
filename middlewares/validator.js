@@ -32,7 +32,19 @@ const companyValidator = Joi.object({
 
 })
 
+const activitiesValidator = Joi.object({
+    activityName: Joi.string().required(),
+    activityDescription: Joi.string().required(),
+    activityType: Joi.string().required(),
+    activityDate: Joi.date().iso().required(),
+})
 
+const goalsValidator = Joi.object({
+    goalName: Joi.string().required(),
+    goalDescription: Joi.string().required(),
+    goalType: Joi.string().required(),
+    goalDate: Joi.date().iso().required(),
+})
 
 export{
     registerSchema,
@@ -40,5 +52,4 @@ export{
     companyValidator,
     checkConnectionExpiryDate,
 };
-
 

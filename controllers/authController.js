@@ -89,6 +89,53 @@ const currentUser = (req, res) => {
         res.json({ user: null });
     }
 };
+const sendVerificationCode =async (req, res) => {
+    const { email } = req.body;
+    if (email.trim() === "") {
+        return res.status(400).json({ error: "Email is required" });
+    }
+    try{
+        const existingUser = await Auth.findOne({email});
+        if(!existingUser){
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Generate a random verification code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000);
+
+    }catch(err){
+        res.status(500).json({ error: err.message });
+    }
+}
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    if (email.trim() === "") {
+        return res.status(400).json({ error: "Email is required" });
+    }
+    try {
+        const user = await
+        Auth.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Generate a random token
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "10m" }
+        );
+        // Send email with the token
+        const link = `${process.env.CLIENT_URL}/reset-password/${token}`;
+        console.log(link);
+        res.json({ message: "Password reset link sent to your email" });
+        // Send email using a mail service
+    }
+    catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 
 const allUsers = async (req, res) => {
     try{
