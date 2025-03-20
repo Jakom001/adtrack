@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import Auth from './authModel.js';
+import Auth from '../models/authModel.js';
 
 const isAuthenticated = (req, res, next) => {
     try{
@@ -17,7 +17,7 @@ const isAuthenticated = (req, res, next) => {
         }catch (err){
             console.error("Error in authentication", err);
             res.clearCookie('token');
-            res.status(500).json({Error: "Invalid or Expired Token", error: err.message });
+            res.status(500).json({Error: `Invalid or Expired Token, ${err.message} `});
         }
 }
 

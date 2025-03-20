@@ -18,8 +18,27 @@ const checkConnectionExpiryDate = Joi.object({
     connectionExpiryDate: Joi.date().iso().required(),
 })
 
+const companyValidator = Joi.object({
+    companyName: Joi.string().required(),
+    industry: Joi.string().required(),
+    website: Joi.string().uri().required(),
+    logo: Joi.string().required(),
+    email: Joi.string().email().required(),
+    phone: Joi.string().required(),
+    address: Joi.string().required(),
+    city: Joi.string().required(),
+    country: Joi.string().required(),
+    description: Joi.string().required(),
+
+})
+
+
+
 export{
     registerSchema,
     loginSchema,
+    companyValidator,
     checkConnectionExpiryDate,
 };
+
+
