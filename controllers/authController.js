@@ -90,4 +90,54 @@ const currentUser = (req, res) => {
     }
 };
 
+const allUsers = async (req, res) => {
+    try{
+        const users = await Auth.find({});
+        res.json({users})       
+    }
+    catch(error){
+        res.status(500).json({error: error.message})
+    }
+}
+
+const updateUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await Auth.findByIdAndUpdate(id, {firstName, lastName, phone, email, password, confirmPassword}
+            , { new: true });
+            if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        res.json({ message: "User updated successfully", data: user });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+const getUserById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await Auth.findById(id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        res.json({ data: user });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+const deleteUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await Auth.findByIdAndDelete(id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        res.json({ message: "User deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 export {register, login, logout, currentUser}
