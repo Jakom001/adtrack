@@ -3,6 +3,8 @@ import {registerSchema} from '../middlewares/validator.js';
 import {loginSchema} from '../middlewares/validator.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import transport from '../middlewares/sendMail.js';
+import crypto from 'crypto';
 
 const register = async (req, res) => {
     const {firstName, lastName, phone, email, password, confirmPassword} = req.body
@@ -57,7 +59,9 @@ const login = async (req, res) => {
 
         // jwt
         const token = jwt.sign(
-            { userId: user._id, email: user.email},
+            { userId: user._id,
+                verified: user.verified, 
+                email: user.email},
                 process.env.JWT_SECRET,
             {
                 expiresIn: process.env.JWT_EXPIRATION
@@ -99,14 +103,50 @@ const sendVerificationCode =async (req, res) => {
         if(!existingUser){
             return res.status(404).json({ error: "User not found" });
         }
+        if(existingUser.verified){
+            return res.status(400).json({ error: "User is already verified" });
+        }
+
 
         // Generate a random verification code
-        const verificationCode = Math.floor(100000 + Math.random() * 900000);
+        const codeValue = Math.floor(100000 + Math.random() * 900000).toString();
 
+        let info = await transport.sendMail({
+            from: process.env.NODE_CODE_SENDING_EMAIL,
+            to: existingUser.email,
+            subject: "Verification Code",
+            html: `Your verification code is: <h1>${codeValue} </h1>`
+        });
+
+        if(info.accepted[0] === existingUser.email){
+            const hashedCodeValue = crypto.createHmac('sha256', process.env.HMAC_CODE_SECRET).update(codeValue).digest('hex');
+            console.log(hashedCodeValue);
+            existingUser.verificationCode = hashedCodeValue;
+            existingUser.verificationCodeValidation = Date.now();
+            await existingUser.save();
+            return res.json({ message: "Verification code sent to your email" });
+        }
+        return res.status(500).json({ error: "Error sending email" });
+
+        
     }catch(err){
         res.status(500).json({ error: err.message });
     }
 }
+
+const verifyVerificationCode = async (req, res) => {
+    const { email, providedCode } = req.body;
+    if (email.trim() === "" || code.trim() === "") {
+        return res.status(400).json({ error: "Email and code are required" });
+    }
+    try{
+
+    }catch (error){
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
 const forgotPassword = async (req, res) => {
     const { email } = req.body;
     if (email.trim() === "") {
@@ -187,4 +227,4 @@ const deleteUser = async (req, res) => {
     }
 }
 
-export {register, login, logout, currentUser}
+export {register, login, logout, currentUser, sendVerificationCode }

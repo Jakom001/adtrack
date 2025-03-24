@@ -14,9 +14,16 @@ const loginSchema = Joi.object({
     password: Joi.string().min(8).required(),
 })
 
+const acceptCodeSchema = Joi.object({
+    email: Joi.string().email().required(),
+    code: Joi.string().required(),
+})
+
 const checkConnectionExpiryDate = Joi.object({
     connectionExpiryDate: Joi.date().iso().required(),
 })
+
+
 
 const companyValidator = Joi.object({
     companyName: Joi.string().required(),
