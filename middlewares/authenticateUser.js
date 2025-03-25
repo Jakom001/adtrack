@@ -1,25 +1,33 @@
 import jwt from 'jsonwebtoken';
 import Auth from '../models/authModel.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const isAuthenticated = (req, res, next) => {
-    try{
-        const token = req.cookies.token;
-       if (token){
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
-        next();
-       }else{
-        console.log("Unauthorized access");
-       return res.status(401).json({ success:false, Error:  "Unauthorized acces"});
-       }
-       
+    let token;
+	if (req.headers.client === 'not-browser') {
+		token = req.headers.authorization;
+	} else {
+		token = req.cookies['Authorization'];
+	}
 
-        }catch (err){
-            console.error("Error in authentication", err);
-            res.clearCookie('token');
-            res.status(500).json({Error: `Invalid or Expired Token, ${err.message} `});
-        }
-}
+	if (!token) {
+		return res.status(403).json({ success: false, message: 'Unauthorized' });
+	}
+
+	try {
+		const userToken = token.split(' ')[1];
+		const jwtVerified = jwt.verify(userToken, process.env.TOKEN_SECRET);
+		if (jwtVerified) {
+			req.user = jwtVerified;
+			next();
+		} else {
+			throw new Error('error in the token');
+		}
+	} catch (error) {
+		console.log(error);
+	}
+};
 
 const checkUser = (req, res, next) => {
     const token = req.cookies.token;

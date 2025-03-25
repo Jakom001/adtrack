@@ -38,7 +38,7 @@ const authSchema = new mongoose.Schema({
         select: false,
     },
     verificationCodeValidation:{
-        type: String,
+        type: Number,
         select: false,
     },
     forgotPasswordCode:{
@@ -46,7 +46,7 @@ const authSchema = new mongoose.Schema({
         select: false,
     },
     forgotPasswordCodeValidation:{
-        type: String,
+        type: Number,
         select: false,
     }
     
