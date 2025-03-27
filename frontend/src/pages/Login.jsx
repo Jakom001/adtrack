@@ -1,5 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -34,11 +35,11 @@ const Login = () => {
             ...prevData,
             [name]: value
         }));
-        // if(formErrors[name]) setFormErrors((prevErrors) => ({
-        //     ...prevErrors,
-        //     [name]: null
-        // }));
-        // if(errors) setErrors("");
+        if(formErrors[name]) setFormErrors((prevErrors) => ({
+            ...prevErrors,
+            [name]: null
+        }));
+        if(errors) setErrors("");
     };
 
     const handleSubmit = async (e) => {
@@ -46,9 +47,31 @@ const Login = () => {
         setMessage("");
         setErrors("");
         if(!validateForm()) return;
-        
         setLoading(true);
-        console.log(formData);
+        
+        try{
+            const response = await axios.post('http://localhost:5000/api/login', formData);
+            setLoading(false);
+            setMessage(response.data.message);
+            // const response = await fetch('http://localhost:5000/api/login', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify(formData)
+            // });
+            // const data = await response.json();
+            // setLoading(false);
+            // if(!response.ok){
+            //     setErrors(data.message);
+            //     return;
+            // }
+            // setMessage(data.message);
+            // navigate('/dashboard');
+        }catch(error){
+            setLoading(false);
+            setErrors(error.response?.data?.message);
+        }
 
         
     };

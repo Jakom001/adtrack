@@ -15,12 +15,12 @@ const register = async (req, res) => {
             firstName, lastName, phone, email, password, confirmPassword
         })
         if(error){
-            return res.status(400).json({Error: error.details[0].message})
+            return res.status(400).json({error: error.details[0].message})
         }
 
         const existingUser = await Auth.findOne({email})
         if(existingUser){
-            return res.status(400).json({Error: 'Email already exists'})
+            return res.status(400).json({error: 'Email already exists'})
         }
         // Hash Password
         const salt = await bcrypt.genSalt(12);
@@ -33,7 +33,8 @@ const register = async (req, res) => {
        
         return res.status(201).json({message: 'User registered successfully', data: result})
     }catch (error){
-        return res.status(400).json({Error: `Error occured while creating the user, ${error.message}`})
+        console.log("Registration error:", error)
+        return res.status(500).json({error: `Error occured while creating the user`})
     }
 }
 
@@ -45,17 +46,17 @@ const login = async (req, res) => {
             email, password
         })
         if(error){
-            return res.status(400).json({Error: error.details[0].message})
+            return res.status(400).json({error: error.details[0].message})
         }
         
         const existingUser = await Auth.findOne({email}).select('+password')
         if(!existingUser){
-            return res.status(400).json({Error: 'User not found'})
+            return res.status(400).json({error: 'Invalid credentials'})
         }
         // Compare Password
         const isMatch = await doHashValidation(password, existingUser.password)
         if(!isMatch){
-            return res.status(400).json({Error: 'Invalid credentials'})
+            return res.status(400).json({error: 'Invalid credentials'})
         }
 
         // jwt
@@ -83,7 +84,8 @@ const login = async (req, res) => {
 			});
 
     }catch (error){
-        return res.status(400).json({Error:`Error occurred during login, ${error.message}`})
+        console.log("Login error:", error)
+        return res.status(500).json({error:`Error occurred during login`})
     }
 }
 
@@ -135,7 +137,8 @@ const sendVerificationCode =async (req, res) => {
 
         
     }catch(err){
-        res.status(500).json({ error: err.message });
+        console.error("Send Verification code error",err);
+        res.status(500).json({ error: "Error occured sending verification code" });
     }
 }
 
@@ -173,7 +176,8 @@ const verifyVerificationCode = async (req, res) => {
         return res.status(400).json({ error: "Invalid verification code" });
 
     }catch (error){
-        res.status(500).json({ error: error.message });
+        console.error("Verify Verification code error", error);
+        res.status(500).json({ error: "Error occured while verifying verification code" });
     }
 }
 const sendForgotPasswordCode =async (req, res) => {
@@ -208,7 +212,8 @@ const sendForgotPasswordCode =async (req, res) => {
 
         
     }catch(err){
-        res.status(500).json({ error: err.message });
+        console.error("Send Forgot Password code error",err);
+        res.status(500).json({ error: "Error occured sending forgot password code" });
     }
 }
 
@@ -248,7 +253,8 @@ const verifyForgotPasswordCode = async (req, res) => {
         return res.status(400).json({ error: "Invalid verification code" });
 
     }catch (error){
-        res.status(500).json({ error: error.message });
+        console.error("Verify Forgot Password code error", error);
+        res.status(500).json({ error: "Error occured while verifying forgot password code" });
     }
 }
 
@@ -283,7 +289,8 @@ const changePassword = async (req, res) => {
         await existingUser.save();
         res.json({ message: "Password changed successfully" });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Change Password error", error);
+        res.status(500).json({ error: "Error occured while changing password" });
     }
 }
 
@@ -294,7 +301,8 @@ const allUsers = async (req, res) => {
         res.json({users})       
     }
     catch(error){
-        res.status(500).json({error: error.message})
+        console.error("Get all users error", error);
+        res.status(500).json({ error: "Error occured while getting all users" });
     }
 }
 
@@ -308,7 +316,8 @@ const updateUser = async (req, res) => {
         }
         res.json({ message: "User updated successfully", data: user });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Update user error", error);
+        res.status(500).json({ error: "Error occured while updating user" });
     }
 }
 
@@ -321,7 +330,8 @@ const getUserById = async (req, res) => {
         }
         res.json({ data: user });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Get user by id error", error);
+        res.status(500).json({ error: "Error occured while getting user by id" });
     }
 }
 
@@ -334,7 +344,8 @@ const deleteUser = async (req, res) => {
         }
         res.json({ message: "User deleted successfully" });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Delete user error", error);
+        res.status(500).json({ error: "Error occured while deleting user" });
     }
 }
 
