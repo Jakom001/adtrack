@@ -7,6 +7,8 @@ import NotFound from './pages/NotFound'
 import Contact from './pages/contact'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import AOS from 'aos';
+import 'aos/dist/aos.css';  
 function App() {
   const [count, setCount] = useState(0)
 
