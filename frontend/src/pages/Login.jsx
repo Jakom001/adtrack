@@ -68,9 +68,15 @@ const Login = () => {
   return (
     <div className='flex flex-col items-center justify-center min-h-screen text-center'>
         <div className="w-xl bg-white p-12 rounded-lg shadow-lg">
-          <h2 className='text-3xl font-bold text-gray-900 mb-6'>
-            Adtrack 
-          </h2>
+            <div className="flex flex-col items-center justify-center gap-3 mb-6">
+                <h1 className='text-3xl font-bold text-gray-900'>
+                    Adtrack 
+                </h1>
+                <div className='bg-green-500 w-12 h-1 rounded-md'></div>
+                <p className='text-gray-700 text-lg  font-medium'>Welcome back! Log in to your account</p>
+                <p className='text-gray-700 text-base'>Don't have an account? <span className='text-blue-500 cursor-pointer' onClick={() => navigate("/register")}>Register</span></p>
+          </div>
+
         {message && <div className="p-3 bg-green-100 text-green-700 rounded mb-4">{message}</div>}
         {errors && <div className="p-3 bg-red-100 text-red-700 rounded mb-4">{errors}</div>}
 
@@ -80,29 +86,40 @@ const Login = () => {
                     Email<span className='text-red-500 font-bold'>*</span>
                 </label>
                 <input
-                    className="w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    
                 />
                 {formErrors.email && <div className="text-red-500 text-xs">{formErrors.email}</div>}
                 
             </div>
-            <div className="mb-4 flex flex-col">
-                <label className="text-left text-sm font-medium text-gray-700 mb-4 ">
-                    Password<span className='text-red-500 font-bold'>*</span>
-                </label>
+            <div className="mb-8 flex flex-col">
+                
+                <div className='flex justify-between'>
+                    <label className="text-left text-sm font-medium text-gray-700 mb-4 ">
+                        Password<span className='text-red-500 font-bold'>*</span>
+                    </label>
+                        <p className='text-blue-500 cursor-pointer' onClick={() => navigate("/forgot-password")}>Forgot Password?</p>
+                </div>
+                
                 <input
-                  className="w-full px-3 py-2  rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                 />
                 {formErrors.password && <div className="text-red-500 text-xs">{formErrors.password}</div>}
-                
+    
+            </div>
+            <div className="flex items-center justify-between mb-8">
+                <div className='flex items-center gap-2'>
+                    <input type="checkbox" id="remember" />
+                    <label htmlFor="remember" className='text-sm font-medium text-gray-700'>Remember me</label>
+                </div>
+                <p className='text-sm font-medium text-gray-700'>Privacy Policy</p>
             </div>
             <div className="flex items-center justify-between gap-4">
                 <button
@@ -114,11 +131,8 @@ const Login = () => {
                 </button>
                 
             </div>
-
         </form>
         </div>
-       
-      
     </div>
   )
 }
