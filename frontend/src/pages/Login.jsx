@@ -60,14 +60,14 @@ const Login = () => {
 
     return (
         <div className='flex flex-col items-center justify-center min-h-screen text-center bg-grayColor'>
-            <div className="w-xl bg-white p-12 rounded-2xl shadow-2xl hover:animate-bounce">
+            <div className="w-xl bg-white p-12 rounded-2xl shadow-2xl transition-all duration-300 hover:translate-y-[-3px]">
                 <div className="flex flex-col items-center justify-center gap-3 mb-6">
                     <h1 className='text-3xl font-bold text-gray-900'>Adtrack</h1>
                     <div className='bg-primary w-12 h-1 rounded-md'></div>
                     <p className='text-gray-700 text-lg font-medium'>Welcome back! Log in to your account</p>
                     <p className='text-gray-700'>
                         Don't have an account? 
-                        <span className='text-primary cursor-pointer' onClick={() => navigate("/register")}> Register</span>
+                        <span className='text-blue-500 cursor-pointer' onClick={() => navigate("/register")}> Register</span>
                     </p>
                 </div>
 
@@ -80,7 +80,7 @@ const Login = () => {
                             Email<span className='text-red-500 font-bold'>*</span>
                         </label>
                         <input
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                             type="email"
                             name="email"
                             value={formData.email}
@@ -94,12 +94,12 @@ const Login = () => {
                             <label className="text-left text-sm font-medium text-gray-700 mb-4">
                                 Password<span className='text-red-500 font-bold'>*</span>
                             </label>
-                            <p className='text-primary cursor-pointer' onClick={() => navigate("/forgot-password")}>Forgot Password?</p>
+                            <p className='text-blue-500 cursor-pointer' onClick={() => navigate("/forgot-password")}>Forgot Password?</p>
                         </div>
 
                         <div className="relative">
                             <input
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-secondary"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:primary"
                                 type={showPassword ? "text" : "password"}
                                 name="password"
                                 value={formData.password}
@@ -133,7 +133,7 @@ const Login = () => {
                     <div className='border-t border-gray-300 mb-8'></div>
                     <p className='text-gray-700 text-base'>
                         By logging in, you agree to our 
-                        <span className='text-primary cursor-pointer' onClick={() => navigate("/terms-conditions")}> Terms & Conditions</span>
+                        <span className='text-blue-500 cursor-pointer' onClick={() => navigate("/terms-conditions")}> Terms & Conditions</span>
                     </p>
                 </form>
             </div>
