@@ -1,5 +1,6 @@
 import mongoose, { models } from 'mongoose';
 
+
 const activitySchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -62,6 +63,7 @@ activitySchema.pre('save', function(next) {
 });
 
 const Activity = mongoose.model('Activity', activitySchema);
+const Category = mongoose.model('Category', categorySchema);
 
-export default Activity;
+export {Activity, Category};
    

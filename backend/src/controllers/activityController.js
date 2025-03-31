@@ -1,19 +1,20 @@
-import Activity from "../models/activityModel";
+import {Activity, Category} from "../models/activityModel";
 
 const allActivities = async (req, res) => {
     try {
         const activities = await Activity.find();
         res.status(200).json({
             status: 'success',
-            results: activities.length,
+            length: activities.length,
             data: {
                 activities
             }
         });
     } catch (error) {
+        console.log("All Activities error", error);
         res.status(404).json({
             status: 'fail',
-            message: error
+            error: "Error getting the activities"
         });
     }
 }
@@ -28,9 +29,10 @@ const getSingleActivity = async (req, res) => {
             }
         });
     } catch (error) {
+        console.log("Single Activity error", error);
         res.status(404).json({
             status: 'fail',
-            message: error
+            error: "Error getting the activity"
         });
     }
 }
@@ -40,14 +42,16 @@ const createActivity = async (req, res) => {
         const newActivity = await Activity.create(req.body);
         res.status(201).json({
             status: 'success',
+            message: 'Activity created successfully',
             data: {
                 activity: newActivity
             }
         });
     } catch (error) {
+        console.log("Create Activity error", error);
         res.status(400).json({
             status: 'fail',
-            message: error
+            error: "Error creating the activity"
         });
     }
 }
@@ -61,15 +65,17 @@ const updateActivity = async (req, res) => {
             });
         res.status(200).json({
             status: 'success',
+            message: 'Activity updated successfully',
             data: {
                 activity
             }
         });
     }
     catch (error) {
+        console.log("Update Activity error", error);
         res.status(404).json({
             status: 'fail',
-            message: error
+            error: "Error updating the activity"
         });
     }
 }
@@ -82,11 +88,13 @@ const deleteActivity = async (req, res) => {
             data: null
         });
     } catch (error) {
+        console.log("Delete Activity error", error);
         res.status(404).json({
             status: 'fail',
-            message: error
+            error: "Error deleting the activity"
         });
     }
 }
+
 
 export { allActivities, getSingleActivity, createActivity, updateActivity, deleteActivity };
