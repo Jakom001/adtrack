@@ -20,3 +20,8 @@ router.patch('/verify-forgot-password-code', verifyForgotPasswordCode);
 router.patch('/change-password',isAuthenticated, changePassword);
 
 export default router;
+
+// Admin only route
+// router.get('/admin', authenticate, checkRole(ROLES.ADMIN), (req, res) => {
+//     res.json({ message: 'Admin dashboard content' });
+//   });

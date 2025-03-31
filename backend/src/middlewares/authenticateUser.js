@@ -51,4 +51,16 @@ const checkUser = (req, res, next) => {
 
 }
 
-export {isAuthenticated, checkUser};
+const checkRole = (...roles) =>{
+	return (req, res, next) => {
+		if(!req.user){
+			return res.status(401).json({er: "You need to be logged in to access this route"});
+		}
+		if (!roles.includes(req.user.role)){
+			return res.status(403).json({error: "You are not authorized to access this route"});
+		}
+		next();
+	}
+}
+
+export {isAuthenticated, checkUser, checkRole};

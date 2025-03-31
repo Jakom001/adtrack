@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 
+const ROLES = {
+    USER: 'user',
+    ADMIN: 'admin',
+};
 const authSchema = new mongoose.Schema({
     firstName: { 
         type: String,
@@ -48,7 +52,15 @@ const authSchema = new mongoose.Schema({
     forgotPasswordCodeValidation:{
         type: Number,
         select: false,
-    }
+    },
+    role: {
+        type: String,
+        enum: [ROLES.USER, ROLES.ADMIN],
+        default: ROLES.USER,
+    },
+    permissions:[{
+        type: String,
+    }]
     
 },
     { timestamps: true }
