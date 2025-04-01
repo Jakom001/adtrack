@@ -5,6 +5,7 @@ const allActivities = async (req, res) => {
         const activities = await Activity.find();
         res.status(200).json({
             status: 'success',
+            message: "Activity fetched successfully",
             length: activities.length,
             data: {
                 activities
@@ -22,6 +23,7 @@ const allActivities = async (req, res) => {
 const getSingleActivity = async (req, res) => {
     try {
         const activity = await Activity.findById(req.params.id);
+        
         res.status(200).json({
             status: 'success',
             data: {

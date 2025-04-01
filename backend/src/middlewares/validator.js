@@ -73,7 +73,6 @@ const companyValidator = Joi.object({
 })
 
 
-
 export{
     registerSchema,
     loginSchema,
@@ -83,6 +82,7 @@ export{
 
     companyValidator,
     categorySchema,
-    projectSchema
+    projectSchema,
+    activitySchema
 };
 
