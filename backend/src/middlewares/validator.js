@@ -44,6 +44,20 @@ const projectSchema = Joi.object({
     description: Joi.string().optional(),
 })
 
+const activitySchema = Joi.object({
+    title: Joi.string().required(),
+    description: Joi.string().optional(),
+    Comment: Joi.string().optional(),
+    status: Joi.string().required(),
+    priority: Joi.string().required(),
+    category: Joi.string().required(),
+    reflection: Joi.string().optional(),
+    project: Joi.string().required(),
+    startTime: Joi.date().optional(),
+    endTime: Joi.date().optional(),
+    reflection: Joi.string().optional(),
+})
+
 const companyValidator = Joi.object({
     companyName: Joi.string().required(),
     industry: Joi.string().required(),
@@ -58,19 +72,7 @@ const companyValidator = Joi.object({
 
 })
 
-const activitiesValidator = Joi.object({
-    activityName: Joi.string().required(),
-    activityDescription: Joi.string().required(),
-    activityType: Joi.string().required(),
-    activityDate: Joi.date().iso().required(),
-})
 
-const goalsValidator = Joi.object({
-    goalName: Joi.string().required(),
-    goalDescription: Joi.string().required(),
-    goalType: Joi.string().required(),
-    goalDate: Joi.date().iso().required(),
-})
 
 export{
     registerSchema,

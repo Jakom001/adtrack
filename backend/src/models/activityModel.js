@@ -1,25 +1,13 @@
 import mongoose, { models } from 'mongoose';
 
-
 const activitySchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
     title: {
         type: String,
         required: true,
         trim:true,
         lowercase: true,
     },
-    whatTodo:{
-        type: String,
-        required: true,
-        trim:true,
-        lowercase: true,
-    },
-    whatHaveDone: {
+    description: {
         type: String,
         required: true,
         trim:true,
@@ -35,8 +23,14 @@ const activitySchema = new mongoose.Schema({
         ref: 'Category',
         required: true
     },
+    projectId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Project',
+        required: true
+    },
     startTime: {
         type: Date,
+        default: Date.now,
         required: true
 
     },
@@ -60,7 +54,7 @@ const activitySchema = new mongoose.Schema({
         enum: ['Low', 'Medium', 'High'],
         default: 'Medium'
     },
-    reflections:{
+    reflection:{
         type:String,
         trim: true,
         lowercase: true,
@@ -78,4 +72,3 @@ const Activity = mongoose.model('Activity', activitySchema);
 const Category = mongoose.model('Category', categorySchema);
 
 export {Activity, Category};
-   
