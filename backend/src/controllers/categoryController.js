@@ -1,4 +1,5 @@
 import Category from '../models/categoryModel.js';
+import { categorySchema } from '../middlewares/validator.js';
 
 const allCategories = async (req, res) => {
     try {
@@ -21,8 +22,17 @@ const allCategories = async (req, res) => {
 }
 
 const createCategory = async (req, res) => {
+    const {title, description} = req.body
+
     try {
-        const newCategory = await Category.create(req.body);
+        const { error } = categorySchema.validate({title, description});
+        if (error) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
+        if (await Category.findOne({title })) {
+            return res.status(400).json({ error: 'Category title already exists' });
+        }
+        const newCategory = await Category.create({title, description});
         res.status(201).json({
             status: 'true', 
             message: 'Category created successfully',
@@ -65,12 +75,24 @@ const singleCategory = async (req, res) => {
 }
 
 const updateCategory = async (req, res) => {
+    const { title, description } = req.body;
     try {
+        const { error } = categorySchema.validate({ title, description });
+        if (error) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
         const category = await Category.findByIdAndUpdate(req.params
-            .id, req.body, {
+            .id, {title, description}, {
                 new: true,
                 runValidators: true
             });
+        
+            if (!category) {
+            return res.status(404).json({
+                status: 'false',
+                error: "Category not found"
+            });
+        }
         res.status(200).json({
             status: 'true', 
             message: "Category updated successfully",
@@ -82,7 +104,7 @@ const updateCategory = async (req, res) => {
     catch (error) {
         console.log("Update Category error", error);
         res.status(404).json({
-            status: 'fail',
+            status: 'false',
             error: "Error updating the category"
         });
     }
@@ -90,15 +112,22 @@ const updateCategory = async (req, res) => {
 
 const deleteCategory = async (req, res) => {
     try {
-        await Category.findByIdAndDelete(req.params.id);
+        const result = await Category.findByIdAndDelete(req.params.id);
+
+        if (!result) {
+            return res.status(404).json({
+                status: 'false',
+                error: "Category not found"
+            });
+        }
         res.status(204).json({
-            status: 'success', message: "Category deleted successfully",
+            status: 'true', message: "Category deleted successfully",
             data: null
         });
     } catch (error) {
         console.log("Delete Category erro", error);
         res.status(404).json({
-            status: 'fail',
+            status: 'false',
             error: "Error deleting the category"
         });
     }

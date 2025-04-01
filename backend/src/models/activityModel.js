@@ -9,26 +9,36 @@ const activitySchema = new mongoose.Schema({
     },
     title: {
         type: String,
-        required: true
+        required: true,
+        trim:true,
+        lowercase: true,
     },
     whatTodo:{
         type: String,
         required: true,
+        trim:true,
+        lowercase: true,
     },
     whatHaveDone: {
         type: String,
         required: true,
+        trim:true,
+        lowercase: true,
     },
     comment: {
-        type: String
-    },
-    category: {
         type: String,
+        trim:true,
+        lowercase: true,
+    },
+    categoryId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category',
         required: true
     },
     startTime: {
         type: Date,
         required: true
+
     },
     endTime: {
         type: Date
@@ -50,9 +60,11 @@ const activitySchema = new mongoose.Schema({
         enum: ['Low', 'Medium', 'High'],
         default: 'Medium'
     },
-    tags: [{
-        type: String
-    }]
+    reflections:{
+        type:String,
+        trim: true,
+        lowercase: true,
+    }
 }, { timestamps: true });
 
 activitySchema.pre('save', function(next) {

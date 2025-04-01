@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import authroutes from './routes/authRoute.js';
+import category from './routes/categoryRoutes.js';
+import project from './routes/projectsRoutes.js';
 
 const app = express();
 
@@ -14,6 +16,8 @@ app.use(helmet());
 
 // Routes
 app.use('/api/auth', authroutes);
+app.use('/api/category', category)
+app.use('/api/project', project)
 
 
 // Home Route

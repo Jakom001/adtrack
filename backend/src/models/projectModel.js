@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const categorySchema = new mongoose.Schema({
+const projectSchema = new mongoose.Schema({
     title: {
         type: String,
         required: [true, "Title is required"],
@@ -13,6 +13,6 @@ const categorySchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-const Category = mongoose.model('Category', categorySchema);
+const Project = mongoose.model('Project', projectSchema);
 
-export default Category;
+export default Project;

@@ -19,9 +19,7 @@ const acceptCodeSchema = Joi.object({
     providedCode: Joi.number().required(),
 })
 
-const checkConnectionExpiryDate = Joi.object({
-    connectionExpiryDate: Joi.date().iso().required(),
-})
+
 
 const changePasswordSchema = Joi.object({
     oldPassword: Joi.string().required(),
@@ -34,6 +32,16 @@ const acceptFPSchema = Joi.object({
     providedCode: Joi.number().required(),
     newPassword: Joi.string().required(),
     confirmPassword: Joi.string().required().valid(Joi.ref('newPassword')).messages({ "any.only": "Passwords must match" }),
+})
+
+const categorySchema = Joi.object({
+    title: Joi.string().required(),
+    description: Joi.string().optional(),
+})
+
+const projectSchema = Joi.object({
+    title: Joi.string().required(),
+    description: Joi.string().optional(),
 })
 
 const companyValidator = Joi.object({
@@ -70,7 +78,9 @@ export{
     acceptCodeSchema,
     changePasswordSchema,
     acceptFPSchema,
+
     companyValidator,
-    checkConnectionExpiryDate,
+    categorySchema,
+    projectSchema
 };
 
