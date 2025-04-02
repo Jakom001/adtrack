@@ -2,7 +2,7 @@ import express from 'express';
 import {register, login, logout, changePassword, currentUser, 
     sendVerificationCode, verifyVerificationCode
     , sendForgotPasswordCode, verifyForgotPasswordCode } from '../controllers/authController.js';
-import {isAuthenticated, checkUser} from '../middlewares/authenticateUser.js';
+import { isAuthenticated, isAdmin } from '../middlewares/authenticateUser.js';
 const router = express.Router();
 
 router.post('/register', register);

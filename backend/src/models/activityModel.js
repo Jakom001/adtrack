@@ -1,4 +1,4 @@
-import mongoose, { models } from 'mongoose';
+import mongoose from 'mongoose';
 
 const activitySchema = new mongoose.Schema({
     user: {
@@ -69,6 +69,5 @@ activitySchema.pre('save', function(next) {
 });
 
 const Activity = mongoose.model('Activity', activitySchema);
-const Category = mongoose.model('Category', categorySchema);
 
-export {Activity, Category};
+export default Activity;

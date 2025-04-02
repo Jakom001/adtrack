@@ -74,8 +74,11 @@ const login = async (req, res) => {
 
 		res.cookie('Authorization', 'Bearer ' + token, {
 				expires: new Date(Date.now() + 8 * 3600000),
-				httpOnly: process.env.NODE_ENV === 'production',
-				secure: process.env.NODE_ENV === 'production',
+				httpOnly: false,
+				secure: false,
+                // domain: process.env.COOKIE_DOMAIN,
+                // sameSite: strict,
+            
 			})
 			.json({
 				success: true,
