@@ -3,7 +3,10 @@ import { categorySchema } from '../middlewares/validator.js';
 
 const allCategories = async (req, res) => {
     try {
-        const categories = await Category.find();
+        const categories = await Category.find().sort({createdAt:-1}).populate({
+            path: 'user',
+            select: 'firstName'
+        });
         res.status(200).json({
             status: 'true',
             length: categories.length,
@@ -23,7 +26,6 @@ const allCategories = async (req, res) => {
 
 const createCategory = async (req, res) => {
     const {title, description} = req.body
-
     try {
         const { error } = categorySchema.validate({title, description});
         if (error) {
@@ -32,7 +34,7 @@ const createCategory = async (req, res) => {
         if (await Category.findOne({title })) {
             return res.status(400).json({ error: 'Category title already exists' });
         }
-        const newCategory = await Category.create({title, description});
+        const newCategory = await Category.create({title, description, user: req.user._id});
         res.status(201).json({
             status: 'true', 
             message: 'Category created successfully',
@@ -82,7 +84,7 @@ const updateCategory = async (req, res) => {
             return res.status(400).json({ error: error.details[0].message });
         }
         const category = await Category.findByIdAndUpdate(req.params
-            .id, {title, description}, {
+            .id, {title, description, user: req.user._id}, {
                 new: true,
                 runValidators: true
             });

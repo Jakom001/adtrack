@@ -51,11 +51,9 @@ const activitySchema = Joi.object({
     status: Joi.string().required(),
     priority: Joi.string().required(),
     category: Joi.string().required(),
-    reflection: Joi.string().optional(),
     project: Joi.string().required(),
     startTime: Joi.date().optional(),
     endTime: Joi.date().optional(),
-    reflection: Joi.string().optional(),
 })
 
 const companyValidator = Joi.object({

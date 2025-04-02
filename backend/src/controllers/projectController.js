@@ -3,7 +3,10 @@ import { projectSchema } from '../middlewares/validator.js';
 
 const allProjects = async (req, res) => {
     try {
-        const projects = await Project.find();
+        const projects = await Project.find().sort({createdAt:-1}).populate({
+            path: 'user',
+            select: 'firstName'
+        });
         res.status(200).json({
             status: 'true',
             length: projects.length,
@@ -32,7 +35,7 @@ const createProject = async (req, res) => {
         if (await Project.findOne({title })) {
             return res.status(400).json({ error: 'Project title already exists' });
         }
-        const newProject = await Project.create({title, description});
+        const newProject = await Project.create({title, description, user: req.user._id});
         res.status(201).json({
             status: 'true', 
             message: 'Project created successfully',
@@ -82,7 +85,7 @@ const updateProject = async (req, res) => {
             return res.status(400).json({ error: error.details[0].message });
         }
         const project = await Project.findByIdAndUpdate(req.params
-            .id, {title, description}, {
+            .id, {title, description, user: req.user._id}, {
                 new: true,
                 runValidators: true
             });

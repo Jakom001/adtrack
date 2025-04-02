@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
 const categorySchema = new mongoose.Schema({
+    user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Auth',
+            required: true
+        },
     title: {
         type: String,
         required: [true, "Title is required"],

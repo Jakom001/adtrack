@@ -1,6 +1,11 @@
 import mongoose, { models } from 'mongoose';
 
 const activitySchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Auth',
+        required: true
+    },
     title: {
         type: String,
         required: true,
@@ -54,11 +59,6 @@ const activitySchema = new mongoose.Schema({
         enum: ['Low', 'Medium', 'High'],
         default: 'Medium'
     },
-    reflection:{
-        type:String,
-        trim: true,
-        lowercase: true,
-    }
 }, { timestamps: true });
 
 activitySchema.pre('save', function(next) {
