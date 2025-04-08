@@ -15,8 +15,8 @@ const Register = () => {
         termsAccepted: false  
     });
     const [formErrors, setFormErrors] = useState({});
-    const [errors, setErrors] = useState("");
-    const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -81,13 +81,13 @@ const Register = () => {
             }));
         }
         
-        if(errors) setErrors("");
+        if(error) setError("");
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage("");
-        setErrors("");
+        setSuccess("");
+        setError("");
         if(!validateForm()) return;
         setLoading(true);
         
@@ -98,9 +98,9 @@ const Register = () => {
         setLoading(false);
 
         if (error) {
-            setErrors(error); 
+            setError(error); 
         } else {
-            setMessage(data.message);
+            setSuccess(data.success);
             setFormData({ 
                 firstName: '',
                 lastName: '',
@@ -119,23 +119,23 @@ const Register = () => {
 
   return (
     <div className='flex flex-col items-center justify-center min-h-screen text-center bg-grayColor'>
-        {message && (
+        {success && (
             <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-auto max-w-lg p-4 bg-green-100 text-green-700 rounded-lg shadow-lg flex items-center justify-between">
-                <span>{message}</span>
+                <span>{success}</span>
                 <X 
                     size={20} 
                     className="ml-4 cursor-pointer hover:text-green-900" 
-                    onClick={() => setMessage("")}
+                    onClick={() => setSuccess("")}
                 />
             </div>
         )}
-        {errors && (
+        {error && (
             <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-auto max-w-lg p-4 bg-red-100 text-red-700 rounded-lg shadow-lg flex items-center justify-between">
-                <span>{errors}</span>
+                <span>{error}</span>
                 <X 
                     size={20} 
                     className="ml-4 cursor-pointer hover:text-red-900" 
-                    onClick={() => setErrors("")}
+                    onClick={() => setError("")}
                 />
             </div>
         )}
