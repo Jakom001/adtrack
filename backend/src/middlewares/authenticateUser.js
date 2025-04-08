@@ -22,7 +22,7 @@ const isAuthenticated = (req, res, next) => {
         next();
     } catch (error) {
         console.log("Token verification failed:", error.message);
-        return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 };
 
@@ -62,7 +62,7 @@ const checkRole = (...roles) =>{
 }
 
 const checkUser = (req, res, next) => {
-    const token = req.cookies.Authorization; // Changed from token to Authorization
+    const token = req.cookies.Authorization; 
     
     if (token) {
         const userToken = token.split(' ')[1];
@@ -82,6 +82,16 @@ const checkUser = (req, res, next) => {
     }
 }
 
-
+const isVerified = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ error: "You need to be logged in to access this route" });
+    }
+    
+    if (!req.user.verified) {
+        return res.status(403).json({ error: "Your account is not verified. Please verify your email to access this feature." });
+    }
+    
+    next();
+};
 
 export {isAuthenticated, checkUser, checkRole, isAdmin};
