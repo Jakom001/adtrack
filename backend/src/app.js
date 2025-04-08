@@ -12,8 +12,6 @@ import { isAuthenticated } from './middlewares/authenticateUser.js';
 
 const app = express();
 
-
-
 // Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));

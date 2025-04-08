@@ -8,8 +8,8 @@ const Login = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [formErrors, setFormErrors] = useState({});
-    const [errors, setErrors] = useState("");
-    const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false); 
 
@@ -33,13 +33,13 @@ const Login = () => {
         const { name, value } = e.target;
         setFormData((prevData) => ({ ...prevData, [name]: value }));
         if (formErrors[name]) setFormErrors((prevErrors) => ({ ...prevErrors, [name]: null }));
-        if (errors) setErrors("");
+        if (error) setError("");
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage("");
-        setErrors("");
+        setSuccess("");
+        setError("");
         if (!validateForm()) return;
         setLoading(true);
 
@@ -47,9 +47,9 @@ const Login = () => {
         setLoading(false);
 
         if (error) {
-            setErrors(error);
+            setError(error);
         } else {
-            setMessage(data.message);
+            setSuccess(data.success);
             setFormData({ email: "", password: "" });
 
             setTimeout(() => {
@@ -71,8 +71,8 @@ const Login = () => {
                     </p>
                 </div>
 
-                {message && <div className="p-3 bg-green-100 text-green-700 rounded mb-4">{message}</div>}
-                {errors && <div className="p-3 bg-red-100 text-red-700 rounded mb-4">{errors}</div>}
+                {success && <div className="p-3 bg-green-100 text-green-700 rounded mb-4">{success}</div>}
+                {error && <div className="p-3 bg-red-100 text-red-700 rounded mb-4">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-8 flex flex-col">
