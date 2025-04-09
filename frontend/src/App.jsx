@@ -7,6 +7,8 @@ import NotFound from './pages/NotFound';
 import Contact from './pages/contact';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 AOS.init({
@@ -23,13 +25,15 @@ function App() {
   return (
     <>
       {!hideNavbarRoutes.includes(location.pathname) && <Navbar />}
-      <Routes>
+      <AuthProvider>
+        <Routes>
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
         <Route path="/" element={<Home />} />
         <Route path="contact" element={<Contact count={count} />} />
         <Route path="*" element={<NotFound />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-      </Routes>
+        </Routes>
+      </AuthProvider>
     </>
   );
 }

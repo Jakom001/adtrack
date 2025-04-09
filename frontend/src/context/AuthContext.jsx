@@ -1,55 +1,155 @@
-import { createContext, useContext, useEffect, useLayoutEffect, useState } from "react";
-import api from "../api/api";
-import { useNavigate } from "react-router-dom";
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { loginUser, registerUser } from '../api/authApi';
 
-const AuthContext = createContext(null);
+// Initial state
+const initialState = {
+  user: null,
+  token: localStorage.getItem('token') || null,
+  isAuthenticated: !!localStorage.getItem('token'),
+  loading: false,
+  error: null
+};
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error("useAuth must be used within a AuthProvider");
-    }
-    return context;
-}
+// Create context
+const AuthContext = createContext(initialState);
 
+// Auth reducer
+const authReducer = (state, action) => {
+  switch (action.type) {
+    case 'AUTH_START':
+      return {
+        ...state,
+        loading: true,
+        error: null
+      };
+    case 'AUTH_SUCCESS':
+      return {
+        ...state,
+        user: action.payload.user,
+        token: action.payload.token,
+        isAuthenticated: true,
+        loading: false,
+        error: null
+      };
+    case 'AUTH_FAILURE':
+      return {
+        ...state,
+        loading: false,
+        error: action.payload
+      };
+    case 'LOGOUT':
+      return {
+        ...state,
+        user: null,
+        token: null,
+        isAuthenticated: false
+      };
+    case 'CLEAR_ERROR':
+      return {
+        ...state,
+        error: null
+      };
+    default:
+      return state;
+  }
+};
+
+// Auth provider component
 export const AuthProvider = ({ children }) => {
-    const [token, setToken] = useState();
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const navigate = useNavigate();
+  const [state, dispatch] = useReducer(authReducer, initialState);
 
-    // Fetch the current user when the component mounts
-    useEffect(() => {
-        const fetchCurrentUser = async () => {
-            try {
-                const response = await api.get("/auth/current-user", { withCredentials: true });
-                setToken(response.data.user);
-            } catch (err) {
-                setToken(null);
-                setError(err.response ? err.response.data.message : "An error occurred");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchCurrentUser();
-    }, []);
-    useLayoutEffect(() => {
-        const authInterceptor = api.interceptors.request.use((config) =>{
-            config.headers.Authorization = 
-            !config._retry && token 
-            ? `Bearer ${token}`
-            : config.headers.Authorization;
-            return config;
-        })
-        return () => {
-            api.interceptors.request.eject(authInterceptor);
-        };
-    }, [token]);
+  // Login function
+  const login = async (formData) => {
+    dispatch({ type: 'AUTH_START' });
     
-    return (
-        <AuthContext.Provider value={{ user, setUser, loading, setLoading, error, setError }}>
-        {children}
-        </AuthContext.Provider>
-    );
-}
+    try {
+      const { data, error } = await loginUser(formData);
+      
+      if (error) {
+        dispatch({ type: 'AUTH_FAILURE', payload: error });
+        return { success: false, error };
+      }
+      
+      // Store token in localStorage
+      localStorage.setItem('token', data.token);
+      
+      // Update state
+      dispatch({ 
+        type: 'AUTH_SUCCESS', 
+        payload: { 
+          user: data.user,
+          token: data.token
+        } 
+      });
+      
+      return { success: true };
+    } catch (error) {
+      dispatch({ 
+        type: 'AUTH_FAILURE', 
+        payload: error.message || 'Something went wrong. Please try again!' 
+      });
+      return { success: false, error: error.message };
+    }
+  };
 
+  // Register function
+  const register = async (formData) => {
+    dispatch({ type: 'AUTH_START' });
+    
+    try {
+      const { data, error } = await registerUser(formData);
+      
+      if (error) {
+        dispatch({ type: 'AUTH_FAILURE', payload: error });
+        return { success: false, error };
+      }
+      
+      return { success: true, message: data.success };
+    } catch (error) {
+      dispatch({ 
+        type: 'AUTH_FAILURE', 
+        payload: error.message || 'Registration failed!' 
+      });
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Logout function
+  const logout = () => {
+    localStorage.removeItem('token');
+    dispatch({ type: 'LOGOUT' });
+  };
+
+  // Clear error
+  const clearError = () => {
+    dispatch({ type: 'CLEAR_ERROR' });
+  };
+
+  // Value object to be provided to consumers
+  const value = {
+    user: state.user,
+    token: state.token,
+    isAuthenticated: state.isAuthenticated,
+    loading: state.loading,
+    error: state.error,
+    login,
+    register,
+    logout,
+    clearError
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Custom hook to use auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

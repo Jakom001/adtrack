@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { loginUser } from '../api/authApi';
 import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const navigate = useNavigate();
+    const { login, error: authError, isAuthenticated, clearError } = useAuth();
+    
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [formErrors, setFormErrors] = useState({});
-    const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false); 
+    const [showPassword, setShowPassword] = useState(false);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/home');
+        }
+        
+        return () => {
+            clearError();
+        };
+    }, [isAuthenticated, navigate, clearError]);
 
     const validateForm = () => {
         let newErrors = {};
@@ -33,28 +43,22 @@ const Login = () => {
         const { name, value } = e.target;
         setFormData((prevData) => ({ ...prevData, [name]: value }));
         if (formErrors[name]) setFormErrors((prevErrors) => ({ ...prevErrors, [name]: null }));
-        if (error) setError("");
+        clearError();
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSuccess("");
-        setError("");
+        
         if (!validateForm()) return;
         setLoading(true);
 
-        const { data, error } = await loginUser(formData);
+        const result = await login(formData);
         setLoading(false);
 
-        if (error) {
-            setError(error);
-        } else {
-            setSuccess(data.success);
+        if (result.success) {
+            setSuccess("Login successful! Redirecting...");
             setFormData({ email: "", password: "" });
-
-            setTimeout(() => {
-                navigate("/home");
-            }, 2000);
         }
     };
 
@@ -72,7 +76,7 @@ const Login = () => {
                 </div>
 
                 {success && <div className="p-3 bg-green-100 text-green-700 rounded mb-4">{success}</div>}
-                {error && <div className="p-3 bg-red-100 text-red-700 rounded mb-4">{error}</div>}
+                {authError && <div className="p-3 bg-red-100 text-red-700 rounded mb-4">{authError}</div>}
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-8 flex flex-col">
