@@ -135,4 +135,22 @@ const deleteCategory = async (req, res) => {
     }
 }
 
+// const getCategories = async (params = {}) => {
+//     const controller = new AbortController();
+//     try {
+//       const response = await api.get('/category/all-categories', { 
+//         params, 
+//         signal: controller.signal 
+//       });
+//       return { data: response.data.data.categories, error: null };
+//     } catch (error) {
+//       if (error.name === 'AbortError') return { data: null, error: 'Request cancelled' };
+//       return { 
+//         data: null, 
+//         error: error.response?.data?.error || "Failed to fetch the categories" 
+//       };
+//     }
+    
+//     return { controller };
+//   };
 export { allCategories, createCategory, singleCategory, updateCategory, deleteCategory };
