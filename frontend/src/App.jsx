@@ -11,6 +11,8 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import AddCategory from './pages/categories/AddCategory';
+import CategoryContextProvider from './context/CategoryContext';
 AOS.init({
   once: false
 }
@@ -26,13 +28,19 @@ function App() {
     <>
       {!hideNavbarRoutes.includes(location.pathname) && <Navbar />}
       <AuthProvider>
+        <CategoryContextProvider>
         <Routes>
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="/" element={<Home />} />
+
+        
+          <Route path="add-category" element={<AddCategory/>}/>
+        
         <Route path="contact" element={<Contact count={count} />} />
         <Route path="*" element={<NotFound />} />
         </Routes>
+        </CategoryContextProvider>
       </AuthProvider>
     </>
   );
