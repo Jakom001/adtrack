@@ -2,18 +2,16 @@ import express from 'express';
 import { allCategories, createCategory, singleCategory, updateCategory, deleteCategory } 
         from '../controllers/categoryController.js';
 
-import csrf from 'csurf';
 const router = express.Router();
-const csrfProtection = csrf({ cookie: true });
 
 router.get('/all-categories',  allCategories);
 
-router.post('/add-category', csrfProtection, createCategory);
+router.post('/add-category',  createCategory);
 
 router.get('/single-category/:id',  singleCategory);
 
-router.put('/edit-category/:id', csrfProtection, updateCategory);
+router.put('/edit-category/:id',  updateCategory);
 
-router.delete('/delete-category/:id', csrfProtection, deleteCategory);
+router.delete('/delete-category/:id',  deleteCategory);
 
 export default router;

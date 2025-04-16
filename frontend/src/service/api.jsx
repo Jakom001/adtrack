@@ -7,7 +7,7 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' }
 });
 
-// Request interceptor for adding token
+// Request interceptor for adding token 
 api.interceptors.request.use(
   config => {
     const token = localStorage.getItem('token');
@@ -28,6 +28,7 @@ api.interceptors.response.use(
       // Clear localStorage and redirect to login
       localStorage.removeItem('token');
       window.location.href = '/login';
+      
     }
     return Promise.reject(error);
   }

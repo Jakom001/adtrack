@@ -31,11 +31,17 @@ const register = async (req, res) => {
         })
         const result = await user.save()
        
-        return res.status(201).json({message: 'User registered successfully', data: result})
-    }catch (error){
-        console.log("Registration error:", error)
-        return res.status(500).json({error: `Error occured while creating the user`})
-    }
+        return res.status(201).json({success: true, message: 'User registered successfully', data: result})
+    }catch (error) {
+        console.error("Registration error:", error);
+        // Differentiate between different types of errors
+        if (error.name === 'ValidationError') {
+          return res.status(400).json({ error: error.message });
+        } else if (error.code === 11000) { // MongoDB duplicate key error
+          return res.status(409).json({ error: 'Email already exists' });
+        }
+        return res.status(500).json({ error: 'Server error occurred during registration' });
+      }
 }
 
 const login = async (req, res) => {
@@ -60,42 +66,64 @@ const login = async (req, res) => {
         }
 
         // jwt
+        // JWT signing with better options
         const token = jwt.sign(
-			{
-				userId: existingUser._id,
-				email: existingUser.email,
-				verified: existingUser.verified,
-			},
-			process.env.TOKEN_SECRET,
-			{
-				expiresIn: '8h',
-			}
-		);
+            {
+            userId: existingUser._id,
+            email: existingUser.email,
+            verified: existingUser.verified,
+            role: existingUser.role, // Include role for authorization
+            },
+            process.env.TOKEN_SECRET,
+            {
+            expiresIn: '8h',
+            // issuer: 'your-app-name',
+            // audience: 'your-app-users',
+            }
+        );
 
-		res.cookie('Authorization', 'Bearer ' + token, {
-				expires: new Date(Date.now() + 8 * 3600000),
-				httpOnly: false,
-				secure: false,
+		// More secure cookie settings
+            res.cookie('Authorization', 'Bearer ' + token, {
+                expires: new Date(Date.now() + 8 * 3600000),
+                httpOnly: true, // Prevent JavaScript access
+                secure: process.env.NODE_ENV === 'production', // HTTPS in production
+                sameSite: 'strict', // CSRF protection
+                path: '/',
                 // domain: process.env.COOKIE_DOMAIN,
-                // sameSite: strict,
-            
-			})
+            })
 			.json({
 				success: true,
 				token,
 				message: 'logged in successfully',
 			});
 
-    }catch (error){
-        console.log("Login error:", error)
-        return res.status(500).json({error:`Error occurred during login`})
+    }catch (error) {
+        console.error("Login error:", error);
+        // Differentiate between different types of errors
+        if (error.name === 'ValidationError') {
+          return res.status(400).json({ error: error.message });
+        } else if (error.code === 11000) { // MongoDB duplicate key error
+          return res.status(409).json({ error: 'Email already exists' });
+        }
+        return res.status(500).json({ error: 'Server error occurred during login' });
     }
 }
 
 const logout = (req, res) => {
-    res.clearCookie('Authorization')
-    res.status(200).json({message: 'Logged out successfully'})
-}
+    try {
+      res.clearCookie('Authorization', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+        // domain: process.env.COOKIE_DOMAIN,
+      });
+      res.status(200).json({ success: true, message: 'Logged out successfully' });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ success: false, error: 'Error during logout' });
+    }
+  }
 const currentUser = (req, res) => {
     if (res.locals.user) {
         res.json({ user: res.locals.user });

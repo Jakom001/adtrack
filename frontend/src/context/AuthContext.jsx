@@ -1,155 +1,225 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { loginUser, registerUser } from '../service/authservice';
+import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from 'react';
+import { loginUser, registerUser, getCurrentUser, requestVerificationCode, 
+  verifyAccount, logoutUser, requestPasswordReset, changePassword, resetPassword, } from '../service/authService';
 
-// Initial state
-const initialState = {
-  user: null,
-  token: localStorage.getItem('token') || null,
-  isAuthenticated: !!localStorage.getItem('token'),
-  loading: false,
-  error: null
-};
+const AuthContext = createContext(null);
 
-// Create context
-const AuthContext = createContext(initialState);
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
 
-// Auth reducer
-const authReducer = (state, action) => {
-  switch (action.type) {
-    case 'AUTH_START':
-      return {
-        ...state,
-        loading: true,
-        error: null
-      };
-    case 'AUTH_SUCCESS':
-      return {
-        ...state,
-        user: action.payload.user,
-        token: action.payload.token,
-        isAuthenticated: true,
-        loading: false,
-        error: null
-      };
-    case 'AUTH_FAILURE':
-      return {
-        ...state,
-        loading: false,
-        error: action.payload
-      };
-    case 'LOGOUT':
-      return {
-        ...state,
-        user: null,
-        token: null,
-        isAuthenticated: false
-      };
-    case 'CLEAR_ERROR':
-      return {
-        ...state,
-        error: null
-      };
-    default:
-      return state;
+  if (!context) {
+    throw new Error("useAuthContext must be used within an AuthProvider");
   }
+  return context;
 };
 
-// Auth provider component
-export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
+export const AuthContextProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check if user is authenticated on mount
+  const checkAuthStatus = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    // Check if token exists in localStorage
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Validate token by fetching current user
+      const result = await getCurrentUser();
+      
+      if (result.data) {
+        setCurrentUser(result.data.user);
+        setIsAuthenticated(true);
+      } else {
+        // If token is invalid, clear localStorage
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        setError(result.error);
+      }
+    } catch (err) {
+      setError(err.message || 'Authentication check failed');
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      localStorage.removeItem('token');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Login function
-  const login = async (formData) => {
-    dispatch({ type: 'AUTH_START' });
+  const login = useCallback(async (formData) => {
+    setLoading(true);
+    setError(null);
     
-    try {
-      const { data, error } = await loginUser(formData);
-      
-      if (error) {
-        dispatch({ type: 'AUTH_FAILURE', payload: error });
-        return { success: false, error };
-      }
-      
+    const result = await loginUser(formData);
+    if (result.data) {
       // Store token in localStorage
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', result.data.token);
+      setIsAuthenticated(true);
       
-      // Update state
-      dispatch({ 
-        type: 'AUTH_SUCCESS', 
-        payload: { 
-          user: data.user,
-          token: data.token
-        } 
-      });
-      
-      return { success: true };
-    } catch (error) {
-      dispatch({ 
-        type: 'AUTH_FAILURE', 
-        payload: error.message || 'Something went wrong. Please try again!' 
-      });
-      return { success: false, error: error.message };
+      // Fetch user details after successful login
+      const userResult = await getCurrentUser();
+      if (userResult.data) {
+        setCurrentUser(userResult.data.user);
+      }
+    } else {
+      setError(result.error);
     }
-  };
+    
+    setLoading(false);
+    return result;
+  }, []);
 
   // Register function
-  const register = async (formData) => {
-    dispatch({ type: 'AUTH_START' });
+  const register = useCallback(async (formData) => {
+    setLoading(true);
+    setError(null);
     
-    try {
-      const { data, error } = await registerUser(formData);
-      
-      if (error) {
-        dispatch({ type: 'AUTH_FAILURE', payload: error });
-        return { success: false, error };
-      }
-      
-      return { success: true, message: data.success };
-    } catch (error) {
-      dispatch({ 
-        type: 'AUTH_FAILURE', 
-        payload: error.message || 'Registration failed!' 
-      });
-      return { success: false, error: error.message };
+    const result = await registerUser(formData);
+    
+    setLoading(false);
+    
+    if (result.error) {
+      setError(result.error);
     }
-  };
+    
+    return result;
+  }, []);
 
   // Logout function
-  const logout = () => {
-    localStorage.removeItem('token');
-    dispatch({ type: 'LOGOUT' });
-  };
+const logout = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  
+  const result = await logoutUser();
+  
+  if (result.success) {
+    // Clear authentication state
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+  } else {
+    setError(result.error);
+  }
+  
+  setLoading(false);
+  return result;
+}, []);
 
-  // Clear error
-  const clearError = () => {
-    dispatch({ type: 'CLEAR_ERROR' });
-  };
+  // Clear any errors
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
-  // Value object to be provided to consumers
-  const value = {
-    user: state.user,
-    token: state.token,
-    isAuthenticated: state.isAuthenticated,
-    loading: state.loading,
-    error: state.error,
+  // Check authentication status on mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
+
+  // Refresh user data periodically or when needed
+  const refreshUserData = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    setLoading(true);
+    const result = await getCurrentUser();
+    
+    if (result.data) {
+      setCurrentUser(result.data.user);
+    } else {
+      if (result.error === 'Unauthorized' || result.error.includes('token')) {
+        // Handle token expiration
+        await logout();
+      }
+      setError(result.error);
+    }
+    setLoading(false);
+  }, [isAuthenticated, logout]);
+
+
+  const changeUserPassword = useCallback(async (formData) => {
+    setLoading(true);
+    setError(null);
+    
+    const result = await changePassword(formData);
+    
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+    }
+    
+    return result;
+  }, []);
+  
+  const verifyUserAccount = useCallback(async (code) => {
+    setLoading(true);
+    setError(null);
+    
+    const result = await verifyAccount(code);
+    
+    if (result.data && currentUser) {
+      // Update user verification status
+      setCurrentUser({...currentUser, verified: true});
+    }
+    
+    setLoading(false);
+    if (result.error) {
+      setError(result.error);
+    }
+    
+    return result;
+  }, [currentUser]);
+
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    currentUser,
+    loading,
+    error,
+    isAuthenticated,
     login,
     register,
     logout,
-    clearError
-  };
+    refreshUserData,
+    clearError,
+    checkAuthStatus,
+    changeUserPassword,
+    verifyUserAccount,
+    requestVerificationCode,
+    requestPasswordReset,
+    resetPassword
+  }), [
+    currentUser,
+    loading,
+    error,
+    isAuthenticated,
+    login,
+    register,
+    logout,
+    refreshUserData,
+    clearError,
+    checkAuthStatus,
+    changeUserPassword,
+    verifyUserAccount,
+    requestVerificationCode,
+    requestPasswordReset,
+    resetPassword
+  ]);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to use auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export default AuthContextProvider;

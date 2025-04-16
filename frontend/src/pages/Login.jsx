@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthContext } from '../context/AuthContext';
 
 const Login = () => {
     const navigate = useNavigate();
-    const { login, error: authError, isAuthenticated, clearError } = useAuth();
+    const { login, loading: authLoading, error: authError, isAuthenticated, clearError } = useAuthContext();
     
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [formErrors, setFormErrors] = useState({});
@@ -14,10 +14,11 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
+        // Redirect if already authenticated
         if (isAuthenticated) {
-            navigate('/home');
+            setTimeout(() => navigate("/home"), 2000);
         }
-        
+        // Clean up errors when component unmounts
         return () => {
             clearError();
         };
@@ -42,8 +43,10 @@ const Login = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prevData) => ({ ...prevData, [name]: value }));
+        // Clear field-specific errors when user types
         if (formErrors[name]) setFormErrors((prevErrors) => ({ ...prevErrors, [name]: null }));
-        clearError();
+        // Clear auth errors when user makes changes
+        if (authError) clearError();
     };
 
     const handleSubmit = async (e) => {
@@ -53,25 +56,34 @@ const Login = () => {
         if (!validateForm()) return;
         setLoading(true);
 
-        const result = await login(formData);
-        setLoading(false);
-
-        if (result.success) {
-            setSuccess("Login successful! Redirecting...");
-            setFormData({ email: "", password: "" });
+        try {
+            const result = await login(formData);
+            
+            if (result.data.success) {
+                setSuccess("Login successful! Redirecting...");
+                setFormData({ email: "", password: "" });
+                // The navigate will be handled by the useEffect when isAuthenticated changes
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
+    // Combined loading state from local and auth context
+    const isLoading = loading || authLoading;
+
     return (
         <div className='flex flex-col items-center justify-center min-h-screen text-center bg-grayColor'>
-            <div className="w-xl bg-white p-12 rounded-2xl shadow-2xl transition-all duration-300 hover:translate-y-[-3px]">
+            <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl transition-all duration-300 hover:translate-y-1">
                 <div className="flex flex-col items-center justify-center gap-3 mb-6">
                     <h1 className='text-3xl font-bold text-gray-900'>Adtrack</h1>
                     <div className='bg-primary w-12 h-1 rounded-md'></div>
                     <p className='text-gray-700 text-lg font-medium'>Welcome back! Log in to your account</p>
                     <p className='text-gray-700'>
                         Don't have an account? 
-                        <span className='text-blue-500 cursor-pointer' onClick={() => navigate("/register")}> Register</span>
+                        <span className='text-blue-500 cursor-pointer ml-1' onClick={() => navigate("/register")}>Register</span>
                     </p>
                 </div>
 
@@ -79,8 +91,8 @@ const Login = () => {
                 {authError && <div className="p-3 bg-red-100 text-red-700 rounded mb-4">{authError}</div>}
 
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-8 flex flex-col">
-                        <label className="text-left text-sm font-medium text-gray-700 mb-4">
+                    <div className="mb-6 flex flex-col">
+                        <label className="text-left text-sm font-medium text-gray-700 mb-2">
                             Email<span className='text-red-500 font-bold'>*</span>
                         </label>
                         <input
@@ -89,25 +101,27 @@ const Login = () => {
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
+                            disabled={isLoading}
                         />
                         {formErrors.email && <div className="text-left text-red-500 text-xs mt-1">{formErrors.email}</div>}
                     </div>
 
-                    <div className="mb-8 flex flex-col">
+                    <div className="mb-6 flex flex-col">
                         <div className='flex justify-between'>
-                            <label className="text-left text-sm font-medium text-gray-700 mb-4">
+                            <label className="text-left text-sm font-medium text-gray-700 mb-2">
                                 Password<span className='text-red-500 font-bold'>*</span>
                             </label>
-                            <p className='text-blue-500 cursor-pointer' onClick={() => navigate("/forgot-password")}>Forgot Password?</p>
+                            <p className='text-blue-500 cursor-pointer text-sm' onClick={() => navigate("/forgot-password")}>Forgot Password?</p>
                         </div>
 
                         <div className="relative">
                             <input
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:primary"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
                                 type={showPassword ? "text" : "password"}
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
+                                disabled={isLoading}
                             />
                             <span
                                 className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500"
@@ -119,25 +133,23 @@ const Login = () => {
                         {formErrors.password && <div className="text-left text-red-500 text-xs mt-1">{formErrors.password}</div>}
                     </div>
 
-                    <div className='flex items-center gap-2 mb-8'>
-                        <input type="checkbox" id="remember" />
+                    <div className='flex items-center gap-2 mb-6'>
+                        <input type="checkbox" id="remember" className="rounded text-primary focus:ring-primary" />
                         <label htmlFor="remember" className='text-sm font-medium text-gray-700'>Remember me</label>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4">
-                        <button
-                            type="submit"
-                            className="w-full p-2 bg-primary text-white rounded-xl cursor-pointer hover:bg-secondary disabled:opacity-50 mb-8"
-                            disabled={loading}
-                        >
-                            {loading ? "Logging in..." : "Login"}
-                        </button>
-                    </div>
+                    <button
+                        type="submit"
+                        className="w-full p-3 bg-primary text-white rounded-xl cursor-pointer hover:bg-opacity-90 disabled:opacity-50 mb-6 font-medium"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? "Logging in..." : "Login"}
+                    </button>
 
-                    <div className='border-t border-gray-300 mb-8'></div>
-                    <p className='text-gray-700 text-base'>
+                    <div className='border-t border-gray-300 pt-4 mb-4'></div>
+                    <p className='text-gray-700 text-sm'>
                         By logging in, you agree to our 
-                        <span className='text-blue-500 cursor-pointer' onClick={() => navigate("/terms-conditions")}> Terms & Conditions</span>
+                        <span className='text-blue-500 cursor-pointer ml-1' onClick={() => navigate("/terms-conditions")}>Terms & Conditions</span>
                     </p>
                 </form>
             </div>
