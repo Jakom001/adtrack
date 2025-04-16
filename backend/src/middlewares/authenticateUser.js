@@ -61,27 +61,6 @@ const checkRole = (...roles) =>{
 	}
 }
 
-const checkUser = (req, res, next) => {
-    const token = req.cookies.Authorization; 
-    
-    if (token) {
-        const userToken = token.split(' ')[1];
-        jwt.verify(userToken, process.env.TOKEN_SECRET, async (err, decodedToken) => {
-            if (err) {
-                res.locals.user = null;
-                next();
-            } else {
-                let user = await Auth.findById(decodedToken.userId).select("-password");
-                res.locals.user = user;
-                next();
-            }
-        });
-    } else {
-        res.locals.user = null;
-        next();
-    }
-}
-
 const isVerified = (req, res, next) => {
     if (!req.user) {
         return res.status(401).json({ error: "You need to be logged in to access this route" });
@@ -94,4 +73,4 @@ const isVerified = (req, res, next) => {
     next();
 };
 
-export {isAuthenticated, checkUser, checkRole, isAdmin};
+export {isAuthenticated, checkRole, isAdmin, isVerified};

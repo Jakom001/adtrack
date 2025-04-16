@@ -124,11 +124,35 @@ const logout = (req, res) => {
       res.status(500).json({ success: false, error: 'Error during logout' });
     }
   }
-const currentUser = (req, res) => {
-    if (res.locals.user) {
-        res.json({ user: res.locals.user });
-    } else {
-        res.json({ user: null });
+
+// Add this to authController.js
+const getCurrentUser = async (req, res) => {
+    const { userId } = req.user;
+    
+    try {
+        const user = await Auth.findById(userId);
+        
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        
+        // Don't return sensitive information
+        const userData = {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phone,
+            role: user.role,
+            verified: user.verified,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
+        
+        res.status(200).json({ user: userData });
+    } catch (error) {
+        console.error("Get current user error:", error);
+        res.status(500).json({ error: "Error occurred while getting current user" });
     }
 };
 
@@ -380,6 +404,6 @@ const deleteUser = async (req, res) => {
     }
 }
 
-export {register, login, logout, currentUser, sendVerificationCode, 
-    verifyVerificationCode, changePassword,
+export {register, login, logout, sendVerificationCode, 
+    verifyVerificationCode, changePassword, getCurrentUser,
     sendForgotPasswordCode, verifyForgotPasswordCode,}

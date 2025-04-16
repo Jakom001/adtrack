@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import './App.css';
 import Navbar from './components/layout/Navbar';
 import Home from './pages/Home';
@@ -11,39 +10,93 @@ import { AuthContextProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-// import AddCategory from './pages/categories/AddCategory';
-import CategoryContextProvider from './context/CategoryContext';
-AOS.init({
-  once: false
-}
-);
-function App() {
-  const [count, setCount] = useState(0);
-  const location = useLocation();
 
-  // Hide Navbar on login and register pages
-  const hideNavbarRoutes = ['/login', '/register'];
+// Pages
+import AddCategory from './pages/categories/AddCategory';
+
+
+// Context Providers
+import CategoryContextProvider from './context/CategoryContext';
+
+AOS.init({ once: false });
+
+function App() {
+  const location = useLocation();
+  const publicRoutes = ['/login', '/register', ];
 
   return (
     <>
-      {!hideNavbarRoutes.includes(location.pathname) && <Navbar />}
+      {!publicRoutes.includes(location.pathname) && <Navbar />}
+      
       <AuthContextProvider>
-        {/* <CategoryContextProvider> */}
         <Routes>
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-        <Route path="/" element={<Home />} />
-
-        
-          {/* <Route path="add-category" element={<AddCategory/>}/> */}
-        
-        <Route path="contact" element={<Contact count={count} />} />
-        <Route path="*" element={<NotFound />} />
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/contact" element={<Contact />} />
+          
+          {/* Protected Routes with Multiple Contexts */}
+          <Route element={<ProtectedRoute />}>
+            {/* Dashboard Layout with all contexts */}
+            <Route element={
+              <MultiContextProvider>
+                <Outlet />
+              </MultiContextProvider>
+            }>
+              {/* Category Routes */}
+              <Route path="/categories">
+                {/* <Route index element={<CategoriesList />} /> */}
+                <Route path="add" element={<AddCategory />} />
+                {/* <Route path="edit/:id" element={<AddCategory />} /> */}
+              </Route>
+    
+              
+              
+              
+              
+            </Route>
+          </Route>
+          
+          {/* Admin-only Routes */}
+          <Route element={<ProtectedRoute adminOnly={true} />}>
+            {/* <Route path="/admin/*" element={<AdminDashboard />} /> */}
+          </Route>
+          
+          {/* 404 Page */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
-        {/* </CategoryContextProvider> */}
       </AuthContextProvider>
     </>
   );
 }
 
+// Component to wrap multiple context providers
+const MultiContextProvider = ({ children }) => {
+  return (
+    <CategoryContextProvider>
+            {children}
+    </CategoryContextProvider>
+  );
+};
+
 export default App;
+
+
+
+// import { lazy, Suspense } from 'react';
+
+// // Lazy load components
+// const CategoriesList = lazy(() => import('./pages/categories/CategoriesList'));
+// const AddCategory = lazy(() => import('./pages/categories/AddCategory'));
+// // ... other lazy imports
+
+// // Then in your Routes
+// <Route path="/categories">
+//   <Route index element={
+//     <Suspense fallback={<div>Loading...</div>}>
+//       <CategoriesList />
+//     </Suspense>
+//   } />
+//   {/* Other routes with Suspense */}
+// </Route>

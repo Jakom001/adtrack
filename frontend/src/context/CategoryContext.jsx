@@ -157,6 +157,7 @@ export const CategoryContextProvider = ({ children }) => {
     };
   }, [fetchCategories]);
 
+
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
     categories,
@@ -190,3 +191,29 @@ export const CategoryContextProvider = ({ children }) => {
 };
 
 export default CategoryContextProvider;
+
+
+// export const CategoryContextProvider = ({ children }) => {
+//   // ...existing state
+//   const [initialized, setInitialized] = useState(false);
+  
+//   // Initial fetch function
+//   const initialize = useCallback(() => {
+//     if (!initialized) {
+//       fetchCategories();
+//       setInitialized(true);
+//     }
+//   }, [initialized, fetchCategories]);
+  
+//   // No automatic fetching on mount
+//   // Consumer components can call initialize() when needed
+  
+//   return (
+//     <CategoryContext.Provider value={{ 
+//       ...otherValues, 
+//       initialize
+//     }}>
+//       {children}
+//     </CategoryContext.Provider>
+//   );
+// };

@@ -21,34 +21,41 @@ export const AuthContextProvider = ({ children }) => {
 
   // Check if user is authenticated on mount
   const checkAuthStatus = useCallback(async () => {
+    console.log("Checking auth status...");
     setLoading(true);
     setError(null);
-
+  
     // Check if token exists in localStorage
     const token = localStorage.getItem('token');
+    console.log("Token exists:", !!token);
     
     if (!token) {
+      console.log("No token found, not authenticated");
       setIsAuthenticated(false);
       setCurrentUser(null);
       setLoading(false);
       return;
     }
-
+  
     try {
       // Validate token by fetching current user
+      console.log("Fetching current user data...");
       const result = await getCurrentUser();
+      console.log("Current user result:", result);
       
       if (result.data) {
+        console.log("User authenticated successfully");
         setCurrentUser(result.data.user);
         setIsAuthenticated(true);
       } else {
-        // If token is invalid, clear localStorage
+        console.log("Authentication failed:", result.error);
         localStorage.removeItem('token');
         setIsAuthenticated(false);
         setCurrentUser(null);
         setError(result.error);
       }
     } catch (err) {
+      console.error("Auth check error:", err);
       setError(err.message || 'Authentication check failed');
       setIsAuthenticated(false);
       setCurrentUser(null);
@@ -64,14 +71,14 @@ export const AuthContextProvider = ({ children }) => {
     setError(null);
     
     const result = await loginUser(formData);
-    if (result.data) {
+    if (result.data && result.data.token) {
       // Store token in localStorage
       localStorage.setItem('token', result.data.token);
       setIsAuthenticated(true);
       
       // Fetch user details after successful login
       const userResult = await getCurrentUser();
-      if (userResult.data) {
+      if (userResult.data && userResult.data.user) {
         setCurrentUser(userResult.data.user);
       }
     } else {
@@ -99,23 +106,35 @@ export const AuthContextProvider = ({ children }) => {
   }, []);
 
   // Logout function
-const logout = useCallback(async () => {
-  setLoading(true);
-  setError(null);
-  
-  const result = await logoutUser();
-  
-  if (result.success) {
-    // Clear authentication state
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-  } else {
-    setError(result.error);
-  }
-  
-  setLoading(false);
-  return result;
-}, []);
+  const logout = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await logoutUser();
+      
+      // Always clear local storage and auth state on logout attempt
+      localStorage.removeItem('token');
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      
+      if (result.error) {
+        setError(result.error);
+      }
+      
+      return result;
+    } catch (err) {
+      console.error("Logout error:", err);
+      // Still clear auth state even if API call fails
+      localStorage.removeItem('token');
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setError("Logout failed, but you've been logged out locally");
+      return { success: true };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Clear any errors
   const clearError = useCallback(() => {

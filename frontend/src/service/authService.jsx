@@ -1,14 +1,6 @@
 import api from './api';
 
-// Get CSRF token for protected requests
-export const getCsrfToken = async () => {
-  try {
-    const response = await api.get('/auth/csrf-token');
-    return { data: response.data, error: null };
-  } catch (error) {
-    return { data: null, error: error.response?.data?.error || 'Failed to get CSRF token' };
-  }
-};
+
 
 // Function to handle user login
 export const loginUser = async (formData) => {
@@ -39,7 +31,7 @@ export const registerUser = async (formData) => {
 // Function to get current user info
 export const getCurrentUser = async () => {
   try {
-    const response = await api.get('/auth/me');
+    const response = await api.get('/auth/current-user');
     return { data: response.data, error: null };
   } catch (error) {
     return { 

@@ -24,7 +24,7 @@ const allCategories = async (req, res) => {
     }
 }
 
-const createCategory = async (req, res) => {
+const addCategory = async (req, res) => {
     const {title, description} = req.body
     try {
         const { error } = categorySchema.validate({title, description});
@@ -153,4 +153,4 @@ const deleteCategory = async (req, res) => {
     
 //     return { controller };
 //   };
-export { allCategories, createCategory, singleCategory, updateCategory, deleteCategory };
+export { allCategories, addCategory, singleCategory, updateCategory, deleteCategory };

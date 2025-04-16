@@ -1,8 +1,8 @@
 import express from 'express';
-import {register, login, logout, changePassword, currentUser, 
+import {register, login, logout, changePassword, getCurrentUser,
     sendVerificationCode, verifyVerificationCode
     , sendForgotPasswordCode, verifyForgotPasswordCode } from '../controllers/authController.js';
-import { isAuthenticated, isAdmin, checkUser } from '../middlewares/authenticateUser.js';
+import { isAuthenticated, isAdmin } from '../middlewares/authenticateUser.js';
 import rateLimit from 'express-rate-limit';
 const router = express.Router();
 
@@ -16,12 +16,10 @@ const authLimiter = rateLimit({
 // Apply rate limit to auth routes
 router.post('/register', authLimiter, register);
 
-router.post('/login', authLimiter, login);
-
+router.post('/login',  login);
 router.post('/logout', isAuthenticated, logout);
 
-router.get('/currerent-user', checkUser, currentUser);
-
+router.get('/current-user', isAuthenticated, getCurrentUser);
 router.patch('/send-verification-code', sendVerificationCode);
 router.patch('/verify-verification-code', verifyVerificationCode);
 router.patch('/send-forgot-password-code',sendForgotPasswordCode);
