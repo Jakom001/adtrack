@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from 'react';
 import { categoryService } from '../service/categoryService';
+import { useAuthContext } from './AuthContext'; // Import the AuthContext
 
 const CategoryContext = createContext(null);
 
@@ -16,7 +17,7 @@ export const CategoryContextProvider = ({ children }) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const { currentUser} = useAuthContext();
   // All Categories
   const fetchCategories = useCallback(async () => {
     setLoading(true);
@@ -48,12 +49,26 @@ export const CategoryContextProvider = ({ children }) => {
     return result;
   }, []);
 
-  // Create category
+  // Create category with user ID
   const addCategory = useCallback(async (categoryData) => {
     setLoading(true);
     setError(null);
     
-    const result = await categoryService.addCategory(categoryData);
+    // check if user is authenticated
+    if(!currentUser){
+      setLoading(false);
+      const errorMsg = "You must loggeg in to add a category"
+      setError(errorMsg);
+      return{data:null, error:errorMsg}
+    }
+    // Add the current user's ID to the category data
+    const categoryWithUserId = {
+      ...categoryData,
+      userId: currentUser?._id 
+    };
+    console.log("adding category with data")
+    
+    const result = await categoryService.addCategory(categoryWithUserId);
     
     setLoading(false);
     
@@ -64,7 +79,7 @@ export const CategoryContextProvider = ({ children }) => {
     }
     
     return result;
-  }, []);
+  }, [currentUser]); // Add currentUser as a dependency
 
   // Update category
   const updateCategory = useCallback(async (id, categoryData) => {
@@ -96,7 +111,7 @@ export const CategoryContextProvider = ({ children }) => {
     }
     
     return result;
-  }, [categories]);
+  }, [categories, isAuthenticated]);
 
   // Delete category
   const deleteCategory = useCallback(async (id) => {
@@ -191,29 +206,3 @@ export const CategoryContextProvider = ({ children }) => {
 };
 
 export default CategoryContextProvider;
-
-
-// export const CategoryContextProvider = ({ children }) => {
-//   // ...existing state
-//   const [initialized, setInitialized] = useState(false);
-  
-//   // Initial fetch function
-//   const initialize = useCallback(() => {
-//     if (!initialized) {
-//       fetchCategories();
-//       setInitialized(true);
-//     }
-//   }, [initialized, fetchCategories]);
-  
-//   // No automatic fetching on mount
-//   // Consumer components can call initialize() when needed
-  
-//   return (
-//     <CategoryContext.Provider value={{ 
-//       ...otherValues, 
-//       initialize
-//     }}>
-//       {children}
-//     </CategoryContext.Provider>
-//   );
-// };

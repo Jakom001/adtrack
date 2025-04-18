@@ -37,11 +37,13 @@ const acceptFPSchema = Joi.object({
 const categorySchema = Joi.object({
     title: Joi.string().required(),
     description: Joi.string().optional(),
+    userId:Joi.string().required()
 })
 
 const projectSchema = Joi.object({
     title: Joi.string().required(),
     description: Joi.string().optional(),
+    userId:Joi.string().required()
 })
 
 const activitySchema = Joi.object({
