@@ -83,19 +83,18 @@ const login = async (req, res) => {
         );
 
 		// More secure cookie settings
-            res.cookie('Authorization', 'Bearer ' + token, {
-                expires: new Date(Date.now() + 8 * 3600000),
-                httpOnly: true, // Prevent JavaScript access
-                secure: process.env.NODE_ENV === 'production', // HTTPS in production
-                sameSite: 'strict', // CSRF protection
-                path: '/',
-                // domain: process.env.COOKIE_DOMAIN,
-            })
-			.json({
-				success: true,
-				token,
-				message: 'logged in successfully',
-			});
+        res.cookie('Authorization', 'Bearer ' + token, {
+            expires: new Date(Date.now() + 8 * 3600000),
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+        })
+        .json({
+            success: true,
+            token,
+            message: 'logged in successfully',
+        });
 
     }catch (error) {
         console.error("Login error:", error);

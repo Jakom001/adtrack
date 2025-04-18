@@ -1,7 +1,5 @@
 import api from './api';
 
-
-
 // Function to handle user login
 export const loginUser = async (formData) => {
   try {

@@ -5,10 +5,18 @@ dotenv.config();
 
 const isAuthenticated = (req, res, next) => {
     let token;
-    if (req.headers.client === 'not-browser') {
+    
+    // Check Authorization header first
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
         token = req.headers.authorization;
-    } else {
+    } 
+    // Then check for cookie
+    else if (req.cookies && req.cookies['Authorization']) {
         token = req.cookies['Authorization'];
+    }
+    // Client header check (your existing code)
+    else if (req.headers.client === 'not-browser') {
+        token = req.headers.authorization;
     }
 
     if (!token) {
@@ -16,7 +24,8 @@ const isAuthenticated = (req, res, next) => {
     }
 
     try {
-        const userToken = token.split(' ')[1];
+        // Extract the token part (remove 'Bearer ' if present)
+        const userToken = token.startsWith('Bearer ') ? token.split(' ')[1] : token;
         const jwtVerified = jwt.verify(userToken, process.env.TOKEN_SECRET);
         req.user = jwtVerified;
         next();
@@ -25,7 +34,6 @@ const isAuthenticated = (req, res, next) => {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 };
-
 const isAdmin = (req, res, next) => {
     if (!req.user) {
         return res.status(401).json({ error: "You need to be logged in to access this route" });
