@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import csrf from 'csurf';
 import cookieParser from 'cookie-parser';
 import authroutes from './routes/authRoute.js';
 import category from './routes/categoryRoutes.js';
@@ -15,14 +16,28 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cors({
-    origin:'http://localhost:5173',
-    credentials: true,
-    optionSuccessStatus: 200
-  }));
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://your-production-frontend-domain.com' 
+    : process.env.FRONTEND_URL,
+  credentials: true, // Important for cookies
+  optionsSuccessStatus: 200,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+}));
 app.use(helmet());
 app.use(cookieParser());
 
 
+const csrfProtection = csrf({ 
+  cookie: { 
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  }
+});
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+})
 
 // Routes
 app.use('/api/auth', authroutes);

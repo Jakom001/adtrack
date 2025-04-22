@@ -6,17 +6,13 @@ dotenv.config();
 const isAuthenticated = (req, res, next) => {
     let token;
     
-    // Check Authorization header first
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-        token = req.headers.authorization;
+    // First check if token is in cookies (browser clients)
+    if (req.cookies && req.cookies.accessToken) {
+        token = req.cookies.accessToken;
     } 
-    // Then check for cookie
-    else if (req.cookies && req.cookies['Authorization']) {
-        token = req.cookies['Authorization'];
-    }
-    // Client header check (your existing code)
-    else if (req.headers.client === 'not-browser') {
-        token = req.headers.authorization;
+    // Then check Authorization header (non-browser clients)
+    else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        token = req.headers.authorization.split(' ')[1];
     }
 
     if (!token) {
@@ -24,16 +20,34 @@ const isAuthenticated = (req, res, next) => {
     }
 
     try {
-        // Extract the token part (remove 'Bearer ' if present)
-        const userToken = token.startsWith('Bearer ') ? token.split(' ')[1] : token;
-        const jwtVerified = jwt.verify(userToken, process.env.TOKEN_SECRET);
-        req.user = jwtVerified;
+        // Verify the token
+        const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+        req.user = decoded;
         next();
     } catch (error) {
         console.log("Token verification failed:", error.message);
+        
+        // Check if this is a token expiration error and we have a refresh token
+        if (error.name === 'TokenExpiredError' && req.cookies && req.cookies.refreshToken) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Token expired', 
+                code: 'TOKEN_EXPIRED' 
+            });
+        }
+        
+        // For any other error, clear the auth cookies
+        if (req.cookies) {
+            res.clearCookie('accessToken');
+            res.clearCookie('refreshToken');
+            res.clearCookie('isLoggedIn');
+        }
+        
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 };
+
+// Other middleware functions remain the same
 const isAdmin = (req, res, next) => {
     if (!req.user) {
         return res.status(401).json({ error: "You need to be logged in to access this route" });
@@ -57,17 +71,17 @@ const isAdmin = (req, res, next) => {
         });
 };
 
-const checkRole = (...roles) =>{
-	return (req, res, next) => {
-		if(!req.user){
-			return res.status(401).json({er: "You need to be logged in to access this route"});
-		}
-		if (!roles.includes(req.user.role)){
-			return res.status(403).json({error: "You are not authorized to access this route"});
-		}
-		next();
-	}
-}
+const checkRole = (...roles) => {
+    return (req, res, next) => {
+        if(!req.user){
+            return res.status(401).json({error: "You need to be logged in to access this route"});
+        }
+        if (!roles.includes(req.user.role)){
+            return res.status(403).json({error: "You are not authorized to access this route"});
+        }
+        next();
+    };
+};
 
 const isVerified = (req, res, next) => {
     if (!req.user) {

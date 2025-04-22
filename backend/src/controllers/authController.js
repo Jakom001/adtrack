@@ -44,85 +44,172 @@ const register = async (req, res) => {
       }
 }
 
+// Enhanced authController.js
+
+// Update login function to set secure cookies instead of just returning a token
 const login = async (req, res) => {
     const {email, password} = req.body;
-
-    try{
-        const {error, value} = loginSchema.validate({
-            email, password
-        })
-        if(error){
-            return res.status(400).json({error: error.details[0].message})
-        }
-        
-        const existingUser = await Auth.findOne({email}).select('+password')
-        if(!existingUser){
-            return res.status(400).json({error: 'Invalid credentials'})
-        }
-        // Compare Password
-        const isMatch = await doHashValidation(password, existingUser.password)
-        if(!isMatch){
-            return res.status(400).json({error: 'Invalid credentials'})
-        }
-
-        // jwt
-        // JWT signing with better options
-        const token = jwt.sign(
-            {
-            userId: existingUser._id,
-            email: existingUser.email,
-            verified: existingUser.verified,
-            role: existingUser.role, // Include role for authorization
-            },
-            process.env.TOKEN_SECRET,
-            {
-            expiresIn: '8h',
-            // issuer: 'your-app-name',
-            // audience: 'your-app-users',
-            }
-        );
-
-		// More secure cookie settings
-        res.cookie('Authorization', 'Bearer ' + token, {
-            expires: new Date(Date.now() + 8 * 3600000),
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            path: '/',
-        })
-        .json({
-            success: true,
-            token,
-            message: 'logged in successfully',
-        });
-
-    }catch (error) {
-        console.error("Login error:", error);
-        // Differentiate between different types of errors
-        if (error.name === 'ValidationError') {
-          return res.status(400).json({ error: error.message });
-        } else if (error.code === 11000) { // MongoDB duplicate key error
-          return res.status(409).json({ error: 'Email already exists' });
-        }
-        return res.status(500).json({ error: 'Server error occurred during login' });
-    }
-}
-
-const logout = (req, res) => {
+  
     try {
-      res.clearCookie('Authorization', {
+      const {error, value} = loginSchema.validate({
+        email, password
+      });
+  
+      if(error) {
+        return res.status(400).json({error: error.details[0].message});
+      }
+      
+      const existingUser = await Auth.findOne({email}).select('+password');
+      if(!existingUser) {
+        return res.status(400).json({error: 'Invalid credentials'});
+      }
+      
+      // Compare Password
+      const isMatch = await doHashValidation(password, existingUser.password);
+      if(!isMatch) {
+        return res.status(400).json({error: 'Invalid credentials'});
+      }
+  
+      // Generate access token
+      const accessToken = jwt.sign(
+        {
+          userId: existingUser._id,
+          email: existingUser.email,
+          verified: existingUser.verified,
+          role: existingUser.role,
+        },
+        process.env.TOKEN_SECRET,
+        { expiresIn: '1h' }
+      );
+  
+      // Generate refresh token with longer expiry
+      const refreshToken = jwt.sign(
+        { userId: existingUser._id },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: '7d' }
+      );
+  
+      // Set secure cookies
+      // Access token cookie - short lived
+      res.cookie('accessToken', accessToken, {
+        maxAge: 3600000, // 1 hour
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/',
-        // domain: process.env.COOKIE_DOMAIN,
       });
+  
+      // Refresh token cookie - longer lived
+      res.cookie('refreshToken', refreshToken, {
+        maxAge: 7 * 24 * 3600000, // 7 days
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/api/auth/refresh', // Restricted path
+      });
+  
+      // For client-side auth status awareness (no sensitive data)
+      res.cookie('isLoggedIn', 'true', {
+        maxAge: 7 * 24 * 3600000, // 7 days
+        httpOnly: false, // Accessible to JavaScript
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+      });
+  
+      // Still return the access token for non-browser clients
+      res.status(200).json({
+        success: true,
+        token: accessToken, // For mobile apps and other non-browser clients
+        message: 'Logged in successfully',
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      return res.status(500).json({ error: 'Server error occurred during login' });
+    }
+  };
+  
+  // Update logout function to clear all cookies
+  const logout = (req, res) => {
+    try {
+      // Clear all auth cookies
+      res.clearCookie('accessToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+      });
+      
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/api/auth/refresh',
+      });
+      
+      res.clearCookie('isLoggedIn', {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+      });
+      
       res.status(200).json({ success: true, message: 'Logged out successfully' });
     } catch (error) {
       console.error("Logout error:", error);
       res.status(500).json({ success: false, error: 'Error during logout' });
     }
-  }
+  };
+  
+  // Add a new refresh token endpoint
+  const refreshAccessToken = async (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+    
+    if (!refreshToken) {
+      return res.status(401).json({ error: 'Refresh token not found' });
+    }
+    
+    try {
+      // Verify the refresh token
+      const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      
+      // Get user from database
+      const user = await Auth.findById(decoded.userId);
+      if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+      }
+      
+      // Generate new access token
+      const accessToken = jwt.sign(
+        {
+          userId: user._id,
+          email: user.email,
+          verified: user.verified,
+          role: user.role,
+        },
+        process.env.TOKEN_SECRET,
+        { expiresIn: '1h' }
+      );
+      
+      // Set new access token cookie
+      res.cookie('accessToken', accessToken, {
+        maxAge: 3600000, // 1 hour
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+      });
+      
+      // Return the new access token for non-browser clients
+      res.status(200).json({
+        success: true,
+        token: accessToken,
+      });
+    } catch (error) {
+      console.error("Token refresh error:", error);
+      return res.status(401).json({ error: 'Invalid or expired refresh token' });
+    }
+  };
 
 // Add this to authController.js
 const getCurrentUser = async (req, res) => {
@@ -404,5 +491,5 @@ const deleteUser = async (req, res) => {
 }
 
 export {register, login, logout, sendVerificationCode, 
-    verifyVerificationCode, changePassword, getCurrentUser,
+    verifyVerificationCode, refreshAccessToken, changePassword, getCurrentUser,
     sendForgotPasswordCode, verifyForgotPasswordCode,}

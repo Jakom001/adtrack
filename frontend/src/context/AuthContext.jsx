@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from 'react';
 import { loginUser, registerUser, getCurrentUser, requestVerificationCode, 
-  verifyAccount, logoutUser, requestPasswordReset, changePassword, resetPassword, } from '../service/authService';
+  verifyAccount, logoutUser, requestPasswordReset, changePassword, resetPassword } from '../service/authService';
 
 const AuthContext = createContext(null);
 
@@ -25,12 +25,15 @@ export const AuthContextProvider = ({ children }) => {
     setLoading(true);
     setError(null);
   
-    // Check if token exists in localStorage
-    const token = localStorage.getItem('token');
-    console.log("Token exists:", !!token);
+    // Check if isLoggedIn cookie exists (simpler check first)
+    const isLoggedInCookie = document.cookie.split(';').some(c => c.trim().startsWith('isLoggedIn='));
+    console.log("isLoggedIn cookie exists:", isLoggedInCookie);
     
-    if (!token) {
-      console.log("No token found, not authenticated");
+    // For non-browser clients we might still have token in localStorage
+    const token = localStorage.getItem('token');
+    
+    if (!isLoggedInCookie && !token) {
+      console.log("No auth cookies found, not authenticated");
       setIsAuthenticated(false);
       setCurrentUser(null);
       setLoading(false);
@@ -38,7 +41,7 @@ export const AuthContextProvider = ({ children }) => {
     }
   
     try {
-      // Validate token by fetching current user
+      // Validate authentication by fetching current user
       console.log("Fetching current user data...");
       const result = await getCurrentUser();
       console.log("Current user result:", result);
@@ -49,6 +52,7 @@ export const AuthContextProvider = ({ children }) => {
         setIsAuthenticated(true);
       } else {
         console.log("Authentication failed:", result.error);
+        // Clear any token in localStorage for completeness
         localStorage.removeItem('token');
         setIsAuthenticated(false);
         setCurrentUser(null);
@@ -71,8 +75,9 @@ export const AuthContextProvider = ({ children }) => {
     setError(null);
     
     const result = await loginUser(formData);
+    
     if (result.data && result.data.token) {
-      // Store token in localStorage
+      // For non-browser clients or as fallback, store token in localStorage
       localStorage.setItem('token', result.data.token);
       setIsAuthenticated(true);
       
@@ -89,7 +94,7 @@ export const AuthContextProvider = ({ children }) => {
     return result;
   }, []);
 
-  // Register function
+  // Register function remains mostly the same
   const register = useCallback(async (formData) => {
     setLoading(true);
     setError(null);
@@ -111,9 +116,10 @@ export const AuthContextProvider = ({ children }) => {
     setError(null);
     
     try {
+      // API call to logout - will clear cookies server-side
       const result = await logoutUser();
       
-      // Always clear local storage and auth state on logout attempt
+      // Clear local storage for good measure
       localStorage.removeItem('token');
       setIsAuthenticated(false);
       setCurrentUser(null);
@@ -141,12 +147,20 @@ export const AuthContextProvider = ({ children }) => {
     setError(null);
   }, []);
 
-  // Check authentication status on mount
+  // Check authentication status on mount and periodically
   useEffect(() => {
     checkAuthStatus();
+    
+    // Set up a timer to check auth status periodically
+    // This helps with cases where the cookie might expire
+    const authCheckInterval = setInterval(() => {
+      checkAuthStatus();
+    }, 15 * 60 * 1000); // Check every 15 minutes
+    
+    return () => clearInterval(authCheckInterval);
   }, [checkAuthStatus]);
 
-  // Refresh user data periodically or when needed
+  // Other functions remain mostly the same
   const refreshUserData = useCallback(async () => {
     if (!isAuthenticated) return;
     
@@ -156,7 +170,7 @@ export const AuthContextProvider = ({ children }) => {
     if (result.data) {
       setCurrentUser(result.data.user);
     } else {
-      if (result.error === 'Unauthorized' || result.error.includes('token')) {
+      if (result.error === 'Unauthorized' || result.error?.includes('token')) {
         // Handle token expiration
         await logout();
       }
@@ -164,7 +178,6 @@ export const AuthContextProvider = ({ children }) => {
     }
     setLoading(false);
   }, [isAuthenticated, logout]);
-
 
   const changeUserPassword = useCallback(async (formData) => {
     setLoading(true);
@@ -199,7 +212,7 @@ export const AuthContextProvider = ({ children }) => {
     return result;
   }, [currentUser]);
 
-  // Memoize the context value to prevent unnecessary re-renders
+  // Memoize the context value
   const contextValue = useMemo(() => ({
     currentUser,
     loading,
@@ -228,10 +241,7 @@ export const AuthContextProvider = ({ children }) => {
     clearError,
     checkAuthStatus,
     changeUserPassword,
-    verifyUserAccount,
-    requestVerificationCode,
-    requestPasswordReset,
-    resetPassword
+    verifyUserAccount
   ]);
 
   return (

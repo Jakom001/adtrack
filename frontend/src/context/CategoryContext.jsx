@@ -111,7 +111,7 @@ export const CategoryContextProvider = ({ children }) => {
     }
     
     return result;
-  }, [categories, isAuthenticated]);
+  }, [categories]);
 
   // Delete category
   const deleteCategory = useCallback(async (id) => {
