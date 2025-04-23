@@ -7,7 +7,6 @@ import rateLimit from 'express-rate-limit';
 const router = express.Router();
 import csrf from 'csurf';
 
-
 const authLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 5, // 5 requests per windowMs for auth routes
@@ -15,14 +14,12 @@ const authLimiter = rateLimit({
 });
 const csrfProtection = csrf({ cookie: true });
 
-
-
 // Apply rate limit to auth routes
 // Routes without CSRF (login, registration don't need CSRF initially)
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
 router.post('/refresh', refreshAccessToken);
-router.get('/current-user',  isAuthenticated, getCurrentUser);
+router.get('/current-user', isAuthenticated,   getCurrentUser);
 
 // Routes with CSRF protection (all state-changing operations after login)
 router.post('/logout', isAuthenticated, csrfProtection, logout);

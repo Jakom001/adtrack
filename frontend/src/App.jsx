@@ -13,10 +13,11 @@ import 'aos/dist/aos.css';
 
 // Pages
 import AddCategory from './pages/categories/AddCategory';
-
+import UpdateCategory from './pages/categories/UpdateCategory';
 
 // Context Providers
 import CategoryContextProvider from './context/CategoryContext';
+
 
 AOS.init({ once: false });
 
@@ -48,7 +49,7 @@ function App() {
               <Route path="/categories">
                 {/* <Route index element={<CategoriesList />} /> */}
                 <Route path="add" element={<AddCategory />} />
-                {/* <Route path="edit/:id" element={<AddCategory />} /> */}
+                { <Route path="edit/:id" element={<UpdateCategory />} /> }
               </Route>
     
               

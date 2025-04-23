@@ -47,7 +47,6 @@ const isAuthenticated = (req, res, next) => {
     }
 };
 
-// Other middleware functions remain the same
 const isAdmin = (req, res, next) => {
     if (!req.user) {
         return res.status(401).json({ error: "You need to be logged in to access this route" });

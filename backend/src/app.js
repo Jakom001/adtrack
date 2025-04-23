@@ -8,6 +8,10 @@ import category from './routes/categoryRoutes.js';
 import project from './routes/projectsRoutes.js';
 import activity from './routes/activityRoutes.js';
 import { isAuthenticated } from './middlewares/authenticateUser.js';
+import rateLimit from 'express-rate-limit';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
+dotenv.config();
 
 
 const app = express();
@@ -18,7 +22,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? 'https://your-production-frontend-domain.com' 
-    : process.env.FRONTEND_URL,
+    : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true, // Important for cookies
   optionsSuccessStatus: 200,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
@@ -26,6 +30,16 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(cookieParser());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to all requests
+app.use(limiter);
 
 
 const csrfProtection = csrf({ 
@@ -45,21 +59,29 @@ app.use('/api/category', isAuthenticated, category)
 app.use('/api/project', isAuthenticated, project)
 app.use('/api/activity', isAuthenticated, activity)
 
-
 // Home Route
 app.get('/', (req, res) => {
     res.send('Welcome to the home page');
 });
 
-// error handler
 
+// Use 'combined' in production, 'dev' in development
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// 404 Route
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
+});
+// Error handling middleware
 app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
   console.error(err.stack);
-  res.status(500).json({ 
-      success: false, 
-      message: process.env.NODE_ENV === 'production' 
-          ? 'Something went wrong!' 
-          : err.message 
+  res.status(statusCode).json({
+    success: false,
+    message: process.env.NODE_ENV === 'production'
+      ? statusCode === 500 ? 'Something went wrong!' : err.message
+      : err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack
   });
 });
 

@@ -63,7 +63,12 @@ const addCategory = async (req, res) => {
 
 const singleCategory = async (req, res) => {
     try {
-        const category = await Category.findById(req.params.id);
+        const { id } = req.params.id
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: 'Invalid  ID format' });
+        }
+        const category = await Category.findById(id);
+        
         if (!category) {
             return res.status(404).json({
                 status: 'false',
@@ -87,14 +92,17 @@ const singleCategory = async (req, res) => {
 }
 
 const updateCategory = async (req, res) => {
-    const { title, description } = req.body;
+    const { title, description, userId } = req.body;
     try {
-        const { error } = categorySchema.validate({ title, description });
+        const { error } = categorySchema.validate({ title, description});
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
         }
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ error: 'Invalid ID format' });
+        }
         const category = await Category.findByIdAndUpdate(req.params
-            .id, {title, description, user: req.user._id}, {
+            .id, {title, description, user: req.params._id}, {
                 new: true,
                 runValidators: true
             });

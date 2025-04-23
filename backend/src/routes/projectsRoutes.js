@@ -1,17 +1,16 @@
 import express from 'express';
-import { allProjects, createProject, singleProject, updateProject, deleteProject } 
+import { allProjects, addProject, singleProject, updateProject, deleteProject } 
         from '../controllers/projectController.js';
-import {isAuthenticated} from '../middlewares/authenticateUser.js';
 
 const router = express.Router();
 
 router.get('/all-projects', allProjects);
 
-router.post('/add-project', createProject);
+router.post('/add-project', addProject);
 
 router.get('/single-project/:id', singleProject);
 
-router.put('/edit-project/:id', updateProject);
+router.put('/update-project/:id', updateProject);
 
 router.delete('/delete-project/:id', deleteProject);
 

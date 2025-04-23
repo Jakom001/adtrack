@@ -24,7 +24,7 @@ const allProjects = async (req, res) => {
     }
 }
 
-const createProject = async (req, res) => {
+const addProject = async (req, res) => {
     const {title, description} = req.body
 
     try {
@@ -136,4 +136,4 @@ const deleteProject = async (req, res) => {
     }
 }
 
-export { allProjects, createProject, singleProject, updateProject, deleteProject };
+export { allProjects, addProject, singleProject, updateProject, deleteProject };
