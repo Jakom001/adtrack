@@ -27,8 +27,8 @@ const isAuthenticated = (req, res, next) => {
     } catch (error) {
         console.log("Token verification failed:", error.message);
         
-        // Check if this is a token expiration error and we have a refresh token
-        if (error.name === 'TokenExpiredError' && req.cookies && req.cookies.refreshToken) {
+        // For token expiration, return specific error code
+        if (error.name === 'TokenExpiredError') {
             return res.status(401).json({ 
                 success: false, 
                 message: 'Token expired', 
@@ -37,11 +37,26 @@ const isAuthenticated = (req, res, next) => {
         }
         
         // For any other error, clear the auth cookies
-        if (req.cookies) {
-            res.clearCookie('accessToken');
-            res.clearCookie('refreshToken');
-            res.clearCookie('isLoggedIn');
-        }
+        res.clearCookie('accessToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+        });
+        
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/api/auth/refresh',
+        });
+        
+        res.clearCookie('isLoggedIn', {
+            httpOnly: false, 
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/',
+        });
         
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }

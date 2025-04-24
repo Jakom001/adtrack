@@ -63,7 +63,7 @@ const addCategory = async (req, res) => {
 
 const singleCategory = async (req, res) => {
     try {
-        const { id } = req.params.id
+        const id  = req.params.id
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: 'Invalid  ID format' });
         }
@@ -94,15 +94,20 @@ const singleCategory = async (req, res) => {
 const updateCategory = async (req, res) => {
     const { title, description, userId } = req.body;
     try {
-        const { error } = categorySchema.validate({ title, description});
+        const { error } = categorySchema.validate({ title, description, userId});
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
         }
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ error: 'Invalid ID format' });
         }
+
+        const loginUser = await Auth.findById(userId)
+        if(!loginUser){
+            return res.status(404).json({success:false, error: "Invalid login user"})
+        }
         const category = await Category.findByIdAndUpdate(req.params
-            .id, {title, description, user: req.params._id}, {
+            .id, {title, description, user: userId}, {
                 new: true,
                 runValidators: true
             });

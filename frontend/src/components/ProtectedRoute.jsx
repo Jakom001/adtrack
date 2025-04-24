@@ -6,9 +6,6 @@ import { useAuthContext } from '../context/AuthContext';
 const ProtectedRoute = ({ adminOnly = false }) => {
     const { currentUser, loading, isAuthenticated, checkAuthStatus } = useAuthContext();
     
-    // Add more logging to debug
-    console.log('ProtectedRoute state:', { loading, isAuthenticated, currentUser });
-    
     // While checking authentication status, show loading spinner
     if (loading) {
         return <div className="loading-spinner">Loading...</div>;

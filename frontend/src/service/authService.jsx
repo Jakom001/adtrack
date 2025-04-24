@@ -65,6 +65,9 @@ export const refreshToken = async () => {
     }
     return { data: response.data, error: null };
   } catch (error) {
+    // If refresh fails, clean up token in localStorage
+    localStorage.removeItem('token');
+    
     return {
       data: null,
       error: error.response?.data?.error || 'Failed to refresh token'

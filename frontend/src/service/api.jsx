@@ -41,22 +41,22 @@ api.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
     
-    // If error is token expired and request hasn't been retried yet
+    // Handle token expiration specifically
     if (error.response?.status === 401 && 
-        error.response?.data?.code === 'TOKEN_EXPIRED' && 
+        (error.response?.data?.code === 'TOKEN_EXPIRED' || error.response?.data?.message === 'Token expired') && 
         !originalRequest._retry) {
       
       originalRequest._retry = true;
       
       try {
-        // Request a new token
+        // Attempt to refresh the token
         const { data } = await axios.post(
           `${API_BASE_URL}/auth/refresh`, 
           {}, 
           { withCredentials: true }
         );
         
-        // If we also support mobile, update localStorage
+        // Update localStorage for mobile clients
         if (data.token) {
           localStorage.setItem('token', data.token);
         }
@@ -64,16 +64,11 @@ api.interceptors.response.use(
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, logout user
-        window.location.href = '/login?session=expired';
+        // If refresh fails, clean up ALL auth data
+        localStorage.removeItem('token');
+        console.log("Token refresh failed, logging out");
         return Promise.reject(refreshError);
       }
-    }
-    
-    // For other 401 errors, redirect to login
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
     }
     
     return Promise.reject(error);

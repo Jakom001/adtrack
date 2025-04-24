@@ -21,19 +21,14 @@ export const AuthContextProvider = ({ children }) => {
 
   // Check if user is authenticated on mount
   const checkAuthStatus = useCallback(async () => {
-    console.log("Checking auth status...");
     setLoading(true);
     setError(null);
   
-    // Check if isLoggedIn cookie exists (simpler check first)
+    // Check both cookie and localStorage token
     const isLoggedInCookie = document.cookie.split(';').some(c => c.trim().startsWith('isLoggedIn='));
-    console.log("isLoggedIn cookie exists:", isLoggedInCookie);
-    
-    // For non-browser clients we might still have token in localStorage
     const token = localStorage.getItem('token');
     
     if (!isLoggedInCookie && !token) {
-      console.log("No auth cookies found, not authenticated");
       setIsAuthenticated(false);
       setCurrentUser(null);
       setLoading(false);
@@ -42,31 +37,38 @@ export const AuthContextProvider = ({ children }) => {
   
     try {
       // Validate authentication by fetching current user
-      console.log("Fetching current user data...");
       const result = await getCurrentUser();
-      console.log("Current user result:", result);
       
       if (result.data) {
-        console.log("User authenticated successfully");
         setCurrentUser(result.data.user);
         setIsAuthenticated(true);
       } else {
-        console.log("Authentication failed:", result.error);
-        // Clear any token in localStorage for completeness
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
-        setCurrentUser(null);
-        setError(result.error);
+        // Handle auth failure - clean up auth data
+        handleAuthFailure(result.error);
       }
     } catch (err) {
-      console.error("Auth check error:", err);
-      setError(err.message || 'Authentication check failed');
-      setIsAuthenticated(false);
-      setCurrentUser(null);
-      localStorage.removeItem('token');
+      handleAuthFailure(err.message || 'Authentication check failed');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleAuthFailure = useCallback((errorMessage) => {
+    console.log("Auth failure:", errorMessage);
+    
+    // Clean up ALL auth data
+    localStorage.removeItem('token');
+    
+    // For browser clients - we can't directly clear cookies from JS
+    // but we can set expired cookies if needed
+    document.cookie = "isLoggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setError(errorMessage);
+    
+    // If this is during initial auth check, avoid redirects
+    // The login page will handle displaying appropriate messages
   }, []);
 
   // Login function

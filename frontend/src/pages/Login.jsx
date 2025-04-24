@@ -14,10 +14,18 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
+        // Check URL parameters for session expired message
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('session') === 'expired') {
+            setFormErrors({general: 'Your session has expired. Please log in again.'});
+        }
+        
         // Redirect if already authenticated
         if (isAuthenticated) {
+            setSuccess("Already logged in. Redirecting...");
             setTimeout(() => navigate("/home"), 2000);
         }
+        
         // Clean up errors when component unmounts
         return () => {
             clearError();
@@ -59,13 +67,18 @@ const Login = () => {
         try {
             const result = await login(formData);
             
-            if (result.data.success) {
+            // Check if result exists and has data property before accessing success
+            if (result && result.data && result.data.success) {
                 setSuccess("Login successful! Redirecting...");
                 setFormData({ email: "", password: "" });
-                // The navigate will be handled by the useEffect when isAuthenticated changes
+                // The redirect will be handled by the useEffect when isAuthenticated changes
+            } else if (result && result.error) {
+                // Display the error from the result if present
+                setFormErrors({general: result.error});
             }
         } catch (error) {
             console.error("Login error:", error);
+            setFormErrors({general: "Login failed. Please try again."});
         } finally {
             setLoading(false);
         }

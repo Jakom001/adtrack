@@ -1,29 +1,33 @@
 import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from 'react';
 import { categoryService } from '../service/categoryService';
-import { useAuthContext } from './AuthContext'; // Import the AuthContext
+import { useAuthContext } from './AuthContext';
 
+// Create the context
 const CategoryContext = createContext(null);
 
-export const useCategoryContext = () => {
+// Custom hook to use the context
+function useCategoryContext() {
   const context = useContext(CategoryContext);
 
   if (!context) {
     throw new Error("useCategoryContext must be used within a CategoryProvider");
   }
   return context;
-};
+}
 
-export const CategoryContextProvider = ({ children }) => {
+// Provider component
+function CategoryContextProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { currentUser} = useAuthContext();
+  const { currentUser } = useAuthContext();
+  
   // All Categories
   const fetchCategories = useCallback(async () => {
     setLoading(true);
     setError(null);
     const result = await categoryService.getCategories();
-    
+    console.log(result)
     if (result.data) {
       setCategories(result.data);
     } else {
@@ -57,16 +61,16 @@ export const CategoryContextProvider = ({ children }) => {
     // check if user is authenticated
     if(!currentUser){
       setLoading(false);
-      const errorMsg = "You must loggeg in to add a category"
+      const errorMsg = "You must be logged in to add a category";
       setError(errorMsg);
-      return{data:null, error:errorMsg}
+      return { data: null, error: errorMsg };
     }
+    
     // Add the current user's ID to the category data
     const categoryWithUserId = {
       ...categoryData,
       userId: currentUser?._id 
     };
-    console.log("adding category with data")
     
     const result = await categoryService.addCategory(categoryWithUserId);
     
@@ -79,7 +83,7 @@ export const CategoryContextProvider = ({ children }) => {
     }
     
     return result;
-  }, [currentUser]); // Add currentUser as a dependency
+  }, [currentUser]);
 
   // Update category
   const updateCategory = useCallback(async (id, categoryData) => {
@@ -94,8 +98,24 @@ export const CategoryContextProvider = ({ children }) => {
     
     setLoading(true);
     setError(null);
+
+    // check if user is logged in
+    if(!currentUser){
+      setLoading(false);
+      const errorMsg = "You must login to update a category";
+      setError(errorMsg);
+      return { data: null, error: errorMsg };
+    }
     
-    const result = await categoryService.updateCategory(id, categoryData);
+    // Add the current user's ID to the category data
+    const categoryWithUserId = {
+      ...categoryData,
+      userId: currentUser?._id 
+    };
+    
+
+    
+    const result = await categoryService.updateCategory(id, categoryWithUserId);
     
     setLoading(false);
 
@@ -111,7 +131,7 @@ export const CategoryContextProvider = ({ children }) => {
     }
     
     return result;
-  }, [categories]);
+  }, [categories, currentUser]);
 
   // Delete category
   const deleteCategory = useCallback(async (id) => {
@@ -203,6 +223,7 @@ export const CategoryContextProvider = ({ children }) => {
       {children}
     </CategoryContext.Provider>
   );
-};
+}
 
-export default CategoryContextProvider;
+// Export both the hook and provider
+export { useCategoryContext, CategoryContextProvider };
