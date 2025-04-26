@@ -18,6 +18,10 @@ import UpdateCategory from './pages/categories/UpdateCategory';
 
 // Context Providers
 import {CategoryContextProvider} from './context/CategoryContext';
+import ProjectList from './pages/projects/ProjectList';
+import AddProject from './pages/projects/AddProject';
+import UpdateProject from './pages/projects/UpdateProject';
+import { ProjectContextProvider } from './context/ProjectContext';
 
 
 AOS.init({ once: false });
@@ -54,6 +58,13 @@ function App() {
                 <Route path="add" element={<AddCategory />} />
                 { <Route path="edit/:id" element={<UpdateCategory />} /> }
               </Route>
+
+              {/* Projects Routes */}
+              <Route path="/projects">
+                <Route index element={<ProjectList />} />
+                <Route path="add" element={<AddProject />} />
+                { <Route path="edit/:id" element={<UpdateProject />} /> }
+              </Route>
               
             </Route>
           </Route>
@@ -75,7 +86,9 @@ function App() {
 const MultiContextProvider = ({ children }) => {
   return (
     <CategoryContextProvider>
-            {children}
+      <ProjectContextProvider>
+        {children}
+      </ProjectContextProvider>      
     </CategoryContextProvider>
   );
 };
