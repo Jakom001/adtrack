@@ -65,9 +65,9 @@ const searchCategories = async (req, res) => {
     }
   };
 
-
 const addCategory = async (req, res) => {
     const {title, description, userId} = req.body
+    
     try {
         const { error } = categorySchema.validate({title, description, userId});
         if (error) {

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const activitySchema = new mongoose.Schema({
+const taskSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Auth',
@@ -35,8 +35,7 @@ const activitySchema = new mongoose.Schema({
     },
     startTime: {
         type: Date,
-        default: Date.now,
-        required: true
+        
 
     },
     endTime: {
@@ -61,13 +60,6 @@ const activitySchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-activitySchema.pre('save', function(next) {
-    if (this.startTime && this.endTime) {
-        this.duration = ((this.endTime - this.startTime) / (1000 * 60*24)) - this.breakTime; // Duration in hours
-    }
-    next();
-});
+const Task = mongoose.model('Task', taskSchema);
 
-const Activity = mongoose.model('Activity', activitySchema);
-
-export default Activity;
+export default Task;

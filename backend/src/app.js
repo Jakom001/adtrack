@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser';
 import authroutes from './routes/authRoute.js';
 import category from './routes/categoryRoutes.js';
 import project from './routes/projectsRoutes.js';
-import activity from './routes/activityRoutes.js';
+import task from './routes/taskRoutes.js';
 import { isAuthenticated } from './middlewares/authenticateUser.js';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
@@ -55,7 +55,7 @@ app.get('/api/csrf-token', csrfProtection, (req, res) => {
 app.use('/api/auth', authroutes);
 app.use('/api/category', isAuthenticated, category)
 app.use('/api/project', isAuthenticated, project)
-app.use('/api/activity', isAuthenticated, activity)
+app.use('/api/task', isAuthenticated, task)
 
 // Home Route
 app.get('/', (req, res) => {

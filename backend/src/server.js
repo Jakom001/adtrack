@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const PORT = process.env.PORT
-console.log(PORT)
 
 // Connect to MongoDB
 connectDB();

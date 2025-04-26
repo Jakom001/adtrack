@@ -1,9 +1,11 @@
-import Activity from '../models/activityModel.js';
-import { activitySchema } from '../middlewares/validator.js';
+import Task from '../models/taskModel.js';
+import { taskSchema } from '../middlewares/validator.js';
+import Auth from '../models/authModel.js';
+import mongoose from 'mongoose'
 
-const allActivities = async (req, res) => {
+const allTasks = async (req, res) => {
     try {
-        const activities = await Activity.find({ user: req.user._id })
+        const tasks = await Task.find({ user: req.user.userId })
             .sort({ createdAt: -1 })
             .populate([
                 {
@@ -18,34 +20,80 @@ const allActivities = async (req, res) => {
         
         res.status(200).json({
             status: 'true',
-            length: activities.length,
-            message: 'Activities fetched successfully',
+            length: tasks.length,
+            message: 'Tasks fetched successfully',
             data: {
-                activities
+                tasks
             }
         });
     } catch (error) {
-        console.log("All Activities error", error);
+        console.log("All Tasks error", error);
         res.status(404).json({
             status: 'false',
-            error: "Error getting the activities"
+            error: "Error getting the tasks"
         });
     }
 }
 
-const createActivity = async (req, res) => {
-    const { title, description, comment, categoryId, projectId, startTime, endTime, breakTime, priority} = req.body;
+const searchTasks = async (req, res) => {
+    try {
+      const searchTerm = req.query.q;
+      
+      if (!searchTerm) {
+        return res.status(400).json({
+          status: 'false',
+          error: 'Search query is required'
+        });
+      }
+  
+      // Create a regex for case-insensitive search
+      const searchRegex = new RegExp(searchTerm, 'i');
+      
+      // Search in both title and description
+      const tasks = await Task.find({
+        $or: [
+          { title: searchRegex },
+          { description: searchRegex }
+        ]
+      }).sort({ createdAt: -1 }).populate({
+        path: 'user',
+        select: 'firstName'
+      });
+      
+      res.status(200).json({
+        status: 'true',
+        length: tasks.length,
+        message: 'Tasks search completed',
+        data: categories
+      });
+    } catch (error) {
+      console.log("Search Tasks error", error);
+      res.status(500).json({
+        status: 'false',
+        error: "Error searching for tasks"
+      });
+    }
+  };
+
+const addTask = async (req, res) => {
+    const { title, description, comment, status, category, project, startTime, endTime, breakTime, priority, userId} = req.body;
     
     try {
-        const { error } = activitySchema.validate({ 
-            title, description, categoryId, projectId, startTime, 
-            endTime, breakTime, priority, comment 
+        const { error } = taskSchema.validate({ 
+            title, description, category, project, startTime, 
+            endTime, breakTime, priority, comment, userId, status, 
         });
         
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
         }
-        
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+                    return res.status(400).json({ error: 'Invalid user ID format' });
+        }
+        const loginUser = await Auth.findById(userId)
+        if(!loginUser){
+            return res.status(404).json({success:false, error: "Invalid login user"})
+        }
         let duration;
         if (endTime) {
             const start = new Date(startTime);
@@ -57,50 +105,50 @@ const createActivity = async (req, res) => {
             if (duration < 0) {
                 return res.status(400).json({ error: 'End time must be after start time, accounting for breaks' });
             }
-            
-            // Convert to minutes
-            duration = Math.floor(duration / (60 * 1000));
+            // Convert to hours
+            duration = Math.floor(duration / (24 * 60 * 1000));
         }
         
         // Set status based on endTime
-        const status = endTime ? 'Completed' : 'In Progress';
+        // const status = endTime ? 'Completed' : 'In Progress';
         
-        const newActivity = await Activity.create({
+        const newTask = await Task.create({
             title,
             description,
             comment,
-            categoryId,
-            projectId,
+            categoryId: category,
+            projectId: project,
             startTime,
             endTime,
             breakTime,
             duration,
             status,
             priority,
-            user: req.user._id
+            user:userId
         });
         
         res.status(201).json({
             status: 'true',
-            message: 'Activity created successfully',
+            message: 'Task created successfully',
             data: {
-                activity: newActivity
+                task: newTask
             }
         });
     } catch (error) {
-        console.log("Create Activity error", error);
+        console.log("Create Task error", error);
         res.status(400).json({
             status: 'false',
-            message: "Error creating the activity"
+            message: "Error creating the task"
         });
     }
 }
 
-const singleActivity = async (req, res) => {
+
+const singleTask = async (req, res) => {
     try {
-        const activity = await Activity.findOne({ 
+        const task = await Task.findOne({ 
             _id: req.params.id,
-            user: req.user._id
+            user: req.user.userId
         }).populate([
             {
                 path: 'categoryId',
@@ -112,35 +160,35 @@ const singleActivity = async (req, res) => {
             }
         ]);
         
-        if (!activity) {
+        if (!task) {
             return res.status(404).json({
                 status: 'false',
-                error: "Activity not found"
+                error: "Task not found"
             });
         }
         
         res.status(200).json({
             status: 'true',
-            message: 'Activity fetched successfully',
+            message: 'Task fetched successfully',
             data: {
-                activity
+                task
             }
         });
     } catch (error) {
-        console.log("Single Activity error", error);
+        console.log("Single Task error", error);
         res.status(404).json({
             status: 'false',
-            error: "Error getting the activity"
+            error: "Error getting the task"
         });
     }
 }
 
-const updateActivity = async (req, res) => {
-    const { title, description, comment, categoryId, projectId, startTime, endTime, breakTime, status, priority } = req.body;
+const updateTask = async (req, res) => {
+    const { title, description, comment, categoryId, projectId, startTime, endTime, breakTime, status, priority, userId } = req.body;
     
     try {
-        const { error } = activitySchema.validate({ 
-            title, description, categoryId, projectId, startTime, 
+        const { error } = taskSchema.validate({ 
+            title, description, categoryId, projectId, userId, startTime, 
             endTime, breakTime, status, priority, comment 
         });
         
@@ -168,10 +216,10 @@ const updateActivity = async (req, res) => {
         // Set status to completed if endTime is provided
         const updatedStatus = endTime ? 'Completed' : (status || 'In Progress');
         
-        const activity = await Activity.findOneAndUpdate(
+        const task = await Task.findOneAndUpdate(
             { 
                 _id: req.params.id,
-                user: req.user._id
+                user: req.user.userId
             }, 
             {
                 title,
@@ -192,81 +240,81 @@ const updateActivity = async (req, res) => {
             }
         );
         
-        if (!activity) {
+        if (!task) {
             return res.status(404).json({
                 status: 'false',
-                error: "Activity not found or you don't have permission to update it"
+                error: "Task not found or you don't have permission to update it"
             });
         }
         
         res.status(200).json({
             status: 'true',
-            message: "Activity updated successfully",
+            message: "Task updated successfully",
             data: {
-                activity
+                task
             }
         });
     } catch (error) {
-        console.log("Update Activity error", error);
+        console.log("Update Task error", error);
         res.status(404).json({
             status: 'false',
-            error: "Error updating the activity"
+            error: "Error updating the task"
         });
     }
 }
 
-const deleteActivity = async (req, res) => {
+const deleteTask = async (req, res) => {
     try {
-        const result = await Activity.findOneAndDelete({ 
+        const result = await Task.findOneAndDelete({ 
             _id: req.params.id,
-            user: req.user._id
+            user: req.user.userId
         });
 
         if (!result) {
             return res.status(404).json({
                 status: 'false',
-                error: "Activity not found or you don't have permission to delete it"
+                error: "Task not found or you don't have permission to delete it"
             });
         }
         
         res.status(204).json({
             status: 'true', 
-            message: "Activity deleted successfully",
+            message: "Task deleted successfully",
             data: null
         });
     } catch (error) {
-        console.log("Delete Activity error", error);
+        console.log("Delete Task error", error);
         res.status(404).json({
             status: 'false',
-            error: "Error deleting the activity"
+            error: "Error deleting the task"
         });
     }
 }
 
 
-const completeActivity = async (req, res) => {
+const completeTask = async (req, res) => {
     const { endTime, breakTime } = req.body;
     
     try {
         if (!endTime) {
-            return res.status(400).json({ error: 'End time is required to complete an activity' });
+            return res.status(400).json({ error: 'End time is required to complete an task' });
         }
         
-        const activity = await Activity.findOne({ 
+        const task = await Task.findOne({ 
             _id: req.params.id,
             user: req.user._id
         });
         
-        if (!activity) {
+        if (!task) {
             return res.status(404).json({
                 status: 'false',
-                error: "Activity not found or you don't have permission to update it"
+                error: "Task not found or you don't have permission to update it"
             });
         }
         
-        const start = new Date(activity.startTime);
+        const start = new Date(task.startTime);
         const end = new Date(endTime);
-        const breakDuration = breakTime || activity.breakTime || 0;
+        const breakDuration = breakTime || task.breakTime || 0;
         
         // Duration in milliseconds minus break time (converted to milliseconds)
         const duration = (end - start) - (breakDuration * 60 * 1000);
@@ -279,7 +327,7 @@ const completeActivity = async (req, res) => {
         // Convert to minutes
         const durationInMinutes = Math.floor(duration / (60 * 1000));
         
-        const updatedActivity = await Activity.findByIdAndUpdate(
+        const updatedTask = await Task.findByIdAndUpdate(
             req.params.id, 
             {
                 endTime,
@@ -295,35 +343,35 @@ const completeActivity = async (req, res) => {
         
         res.status(200).json({
             status: 'true',
-            message: "Activity completed successfully",
+            message: "Task completed successfully",
             data: {
-                activity: updatedActivity
+                task: updatedTask
             }
         });
     } catch (error) {
-        console.log("Complete Activity error", error);
+        console.log("Complete Task error", error);
         res.status(400).json({
             status: 'false',
-            error: "Error completing the activity"
+            error: "Error completing the task"
         });
     }
 }
 
-const getActivityStats = async (req, res) => {
+const getTaskStats = async (req, res) => {
     try {
-        // Get activities for the logged-in user
-        const activities = await Activity.find({ 
+        // Get tasks for the logged-in user
+        const tasks = await Task.find({ 
             user: req.user._id,
-            status: 'Completed' // Only include completed activities for stats
+            status: 'Completed' // Only include completed tasks for stats
         });
         
         // Calculate total time spent
-        const totalDuration = activities.reduce((total, activity) => {
-            return total + (activity.duration || 0);
+        const totalDuration = tasks.reduce((total, task) => {
+            return total + (task.duration || 0);
         }, 0);
         
         // Calculate time spent by category
-        const categoryStats = await Activity.aggregate([
+        const categoryStats = await Task.aggregate([
             { $match: { user: req.user._id, status: 'Completed' } },
             { $group: { _id: '$categoryId', totalDuration: { $sum: '$duration' } } },
             { $lookup: { from: 'categories', localField: '_id', foreignField: '_id', as: 'category' } },
@@ -332,7 +380,7 @@ const getActivityStats = async (req, res) => {
         ]);
         
         // Calculate time spent by project
-        const projectStats = await Activity.aggregate([
+        const projectStats = await Task.aggregate([
             { $match: { user: req.user._id, status: 'Completed' } },
             { $group: { _id: '$projectId', totalDuration: { $sum: '$duration' } } },
             { $lookup: { from: 'projects', localField: '_id', foreignField: '_id', as: 'project' } },
@@ -342,29 +390,30 @@ const getActivityStats = async (req, res) => {
         
         res.status(200).json({
             status: 'true',
-            message: 'Activity statistics fetched successfully',
+            message: 'Task statistics fetched successfully',
             data: {
-                totalActivities: activities.length,
+                totalTasks: tasks.length,
                 totalDuration,
                 categoryStats,
                 projectStats
             }
         });
     } catch (error) {
-        console.log("Activity Stats error", error);
+        console.log("Task Stats error", error);
         res.status(400).json({
             status: 'false',
-            error: "Error fetching activity statistics"
+            error: "Error fetching task statistics"
         });
     }
 }
 
 export { 
-    allActivities, 
-    createActivity, 
-    singleActivity, 
-    updateActivity, 
-    deleteActivity,
-    completeActivity,
-    getActivityStats
+    allTasks, 
+    addTask, 
+    singleTask, 
+    updateTask, 
+    deleteTask,
+    searchTasks,
+    completeTask,
+    getTaskStats
 };

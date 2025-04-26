@@ -46,16 +46,18 @@ const projectSchema = Joi.object({
     userId:Joi.string().required()
 })
 
-const activitySchema = Joi.object({
+const taskSchema = Joi.object({
     title: Joi.string().required(),
     description: Joi.string().optional(),
-    Comment: Joi.string().optional(),
+    comment: Joi.string().optional(),
     status: Joi.string().required(),
     priority: Joi.string().required(),
     category: Joi.string().required(),
     project: Joi.string().required(),
     startTime: Joi.date().optional(),
     endTime: Joi.date().optional(),
+    userId: Joi.string().required(),
+    breakTime: Joi.string().optional(),
 })
 
 const companyValidator = Joi.object({
@@ -83,6 +85,6 @@ export{
     companyValidator,
     categorySchema,
     projectSchema,
-    activitySchema
+    taskSchema
 };
 
