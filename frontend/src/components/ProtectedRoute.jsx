@@ -2,13 +2,17 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
-
+import WaveLoading from './common/WaveLoading';
 const ProtectedRoute = ({ adminOnly = false }) => {
     const { currentUser, loading, isAuthenticated, checkAuthStatus } = useAuthContext();
     
     // While checking authentication status, show loading spinner
     if (loading) {
-        return <div className="loading-spinner">Loading...</div>;
+        return <div className="flex flex-col items-center py-8">
+        <WaveLoading />
+     
+        <div className="mt-4 animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
     }
     
     // If admin-only route, check if user is admin

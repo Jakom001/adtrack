@@ -25,6 +25,47 @@ const allCategories = async (req, res) => {
     }
 }
 
+const searchCategories = async (req, res) => {
+    try {
+      const searchTerm = req.query.q;
+      
+      if (!searchTerm) {
+        return res.status(400).json({
+          status: 'false',
+          error: 'Search query is required'
+        });
+      }
+  
+      // Create a regex for case-insensitive search
+      const searchRegex = new RegExp(searchTerm, 'i');
+      
+      // Search in both title and description
+      const categories = await Category.find({
+        $or: [
+          { title: searchRegex },
+          { description: searchRegex }
+        ]
+      }).sort({ createdAt: -1 }).populate({
+        path: 'user',
+        select: 'firstName'
+      });
+      
+      res.status(200).json({
+        status: 'true',
+        length: categories.length,
+        message: 'Categories search completed',
+        data: categories
+      });
+    } catch (error) {
+      console.log("Search Categories error", error);
+      res.status(500).json({
+        status: 'false',
+        error: "Error searching for categories"
+      });
+    }
+  };
+
+
 const addCategory = async (req, res) => {
     const {title, description, userId} = req.body
     try {
@@ -176,4 +217,4 @@ const deleteCategory = async (req, res) => {
     
 //     return { controller };
 //   };
-export { allCategories, addCategory, singleCategory, updateCategory, deleteCategory };
+export { allCategories, addCategory, singleCategory, updateCategory, searchCategories, deleteCategory };

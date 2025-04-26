@@ -20,9 +20,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://your-production-frontend-domain.com' 
-    : ['http://localhost:5173', 'http://localhost:3000'],
+  origin: 'http://localhost:5173',
   credentials: true, // Important for cookies
   optionsSuccessStatus: 200,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
