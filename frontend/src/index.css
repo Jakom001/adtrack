@@ -5,3 +5,20 @@
     --color-secondary: #B59A65;
     --color-grayColor: #E7E6E6;
 }
+.custom-scrollbar::-webkit-scrollbar {
+    width: 7px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #387269;
+    border-radius: 8px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #2563eb; /* blue-600 on hover */
+  }
+  
