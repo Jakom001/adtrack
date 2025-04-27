@@ -291,7 +291,6 @@ const deleteTask = async (req, res) => {
     }
 }
 
-
 const completeTask = async (req, res) => {
     const { endTime, breakTime } = req.body;
     
@@ -414,6 +413,4 @@ export {
     updateTask, 
     deleteTask,
     searchTasks,
-    completeTask,
-    getTaskStats
 };

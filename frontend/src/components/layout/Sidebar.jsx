@@ -24,26 +24,26 @@ const Sidebar = () => {
       {/* Navigation links section */}
       <div className="flex-1 px-6 overflow-y-auto custom-scrollbar">
         <NavLink to="/dashboard" className={({isActive}) => 
-        `mt-4 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-primary text-white' : ''
+        `mt-4 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''
         }`}>
           <MonitorCheck /> Dashboard
         </NavLink>
         <div className="my-4 border-b border-gray-300 w-full"></div>
 
         <NavLink to="/projects" className={({isActive}) => 
-        `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-primary text-white' : ''
+        `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''
         }`}>
         <FolderOpenDot /> Projects
         </NavLink>
 
         <NavLink to="/categories" className={({isActive}) => 
-        `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-primary text-white' : ''
+        `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''
         }`}>
         <ChartBarStacked /> Categories
         </NavLink>
 
         <NavLink to="/tasks" className={({isActive}) => 
-        `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-primary text-white' : ''
+        `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''
         }`}>
         <CalendarClock /> Today
         </NavLink>
