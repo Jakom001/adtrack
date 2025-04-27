@@ -1,4 +1,6 @@
 import Task from '../models/taskModel.js';
+import Project from '../models/projectModel.js';
+import Category from '../models/categoryModel.js';
 import { taskSchema } from '../middlewares/validator.js';
 import Auth from '../models/authModel.js';
 import mongoose from 'mongoose'
@@ -51,6 +53,7 @@ const searchTasks = async (req, res) => {
       
       // Search in both title and description
       const tasks = await Task.find({
+        user: req.user.userId, 
         $or: [
           { title: searchRegex },
           { description: searchRegex }
@@ -76,11 +79,11 @@ const searchTasks = async (req, res) => {
   };
 
 const addTask = async (req, res) => {
-    const { title, description, comment, status, category, project, startTime, endTime, breakTime, priority, userId} = req.body;
+    const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime, priority, userId} = req.body;
     
     try {
         const { error } = taskSchema.validate({ 
-            title, description, category, project, startTime, 
+            title, description, categoryId, projectId, startTime, 
             endTime, breakTime, priority, comment, userId, status, 
         });
         
@@ -89,6 +92,20 @@ const addTask = async (req, res) => {
         }
         if (!mongoose.Types.ObjectId.isValid(userId)) {
                     return res.status(400).json({ error: 'Invalid user ID format' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            return res.status(400).json({ error: 'Invalid category ID format' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(projectId)) {
+            return res.status(400).json({ error: 'Invalid category ID format' });
+        }
+        const checkProject = await Project.findById(projectId)
+        if(!checkProject){
+            return res.status(404).json({success:false, error: "Invalid  project Id"})
+        }
+        const checkCategory = await Category.findById(projectId)
+        if(!checkCategory){
+            return res.status(404).json({success:false, error: "Invalid  project Id"})
         }
         const loginUser = await Auth.findById(userId)
         if(!loginUser){
@@ -116,8 +133,8 @@ const addTask = async (req, res) => {
             title,
             description,
             comment,
-            categoryId: category,
-            projectId: project,
+            category: categoryId,
+            project: projectId,
             startTime,
             endTime,
             breakTime,
@@ -147,7 +164,7 @@ const addTask = async (req, res) => {
 const singleTask = async (req, res) => {
     try {
         const task = await Task.findOne({ 
-            _id: req.params.id,
+            id: req.params.id,
             user: req.user.userId
         }).populate([
             {
@@ -184,16 +201,37 @@ const singleTask = async (req, res) => {
 }
 
 const updateTask = async (req, res) => {
-    const { title, description, comment, categoryId, projectId, startTime, endTime, breakTime, status, priority, userId } = req.body;
+    const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime, priority, userId} = req.body;
     
     try {
         const { error } = taskSchema.validate({ 
-            title, description, categoryId, projectId, userId, startTime, 
-            endTime, breakTime, status, priority, comment 
+            title, description, categoryId, projectId, startTime, 
+            endTime, breakTime, priority, comment, userId, status, 
         });
         
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
+        }
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+                    return res.status(400).json({ error: 'Invalid user ID format' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            return res.status(400).json({ error: 'Invalid category ID format' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(projectId)) {
+            return res.status(400).json({ error: 'Invalid category ID format' });
+        }
+        const checkProject = await Project.findById(projectId)
+        if(!checkProject){
+            return res.status(404).json({success:false, error: "Invalid  project Id"})
+        }
+        const checkCategory = await Category.findById(projectId)
+        if(!checkCategory){
+            return res.status(404).json({success:false, error: "Invalid  project Id"})
+        }
+        const loginUser = await Auth.findById(userId)
+        if(!loginUser){
+            return res.status(404).json({success:false, error: "Invalid login user"})
         }
         
         // Calculate duration if endTime is provided
@@ -225,8 +263,8 @@ const updateTask = async (req, res) => {
                 title,
                 description,
                 comment,
-                categoryId,
-                projectId,
+                categroy: categoryId,
+                project: projectId,
                 startTime,
                 endTime,
                 breakTime,
