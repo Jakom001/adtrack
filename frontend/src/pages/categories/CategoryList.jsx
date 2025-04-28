@@ -180,7 +180,7 @@ const CategoryList = () => {
   };
 
   return (
-    <div className="p-5 bg-white rounded-lg shadow">
+    <div className=" p-5 bg-white rounded-lg shadow">
       <h2 className="text-xl font-semibold text-gray-800 mb-5">Categories</h2>
       
       {/* Search form */}

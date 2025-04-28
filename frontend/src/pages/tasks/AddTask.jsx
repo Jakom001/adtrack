@@ -1,39 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTaskContext } from '../../context/TaskContext';
 import { useProjectContext } from '../../context/ProjectContext';
 import { useCategoryContext } from '../../context/CategoryContext';
-import { useAuthContext } from '../../context/AuthContext';
 
 const AddTask = () => {
   const navigate = useNavigate();
   const { addTask, loading, error, clearError } = useTaskContext();
-  const { projects, fetchProjects } = useProjectContext();
-  const { categories, fetchCategories } = useCategoryContext();
-  const { users, fetchUsers } = useAuthContext();
+  const { projects} = useProjectContext();
+  const { categories } = useCategoryContext();
+
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     comment: '',
-    status: 'pending', // Default status
+    status: 'Pending', // Default status
     categoryId: '',
     projectId: '',
     startTime: '',
     endTime: '',
-    userId: '',
     breakTime: ''
   });
   
   const [success, setSuccess] = useState('');
   const [formErrors, setFormErrors] = useState({});
-
-  // Fetch required data for select fields
-  useEffect(() => {
-    fetchProjects();
-    fetchCategories();
-    fetchUsers();
-  }, []);
 
   const validateForm = () => {
     let newErrors = {};
@@ -53,11 +44,6 @@ const AddTask = () => {
     if (!formData.projectId) {
       newErrors.projectId = "Project is required";
     }
-    
-    if (!formData.userId) {
-      newErrors.userId = "User is required";
-    }
-    
     // Validate start and end time if both are provided
     if (formData.startTime && formData.endTime) {
       const start = new Date(formData.startTime);
@@ -80,7 +66,7 @@ const AddTask = () => {
     if (formErrors[name]) {
       setFormErrors((prevErrors) => ({ ...prevErrors, [name]: null }));
     }
-    
+  
     // Clear global API error
     if (error) clearError();
   };
@@ -90,7 +76,7 @@ const AddTask = () => {
     setSuccess("");
     
     if (!validateForm()) return;
-    
+   
     const result = await addTask(formData);
 
     if (result.data) {
@@ -99,12 +85,11 @@ const AddTask = () => {
         title: '',
         description: '',
         comment: '',
-        status: 'pending',
+        status: 'Pending',
         categoryId: '',
         projectId: '',
         startTime: '',
         endTime: '',
-        userId: '',
         breakTime: ''
       });
       
@@ -216,7 +201,7 @@ const AddTask = () => {
                 <option value="">Select a category</option>
                 {categories && categories.map(category => (
                   <option key={category._id} value={category._id}>
-                    {category.name}
+                    {category.title}
                   </option>
                 ))}
               </select>
@@ -240,10 +225,9 @@ const AddTask = () => {
                   formErrors.status ? 'border-red-500' : 'border-gray-300'
                 } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
               >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="Pending">Pending</option>
+                <option value="In_progress">In Progress</option>
+                <option value="Completed">Completed</option>
               </select>
               {formErrors.status && (
                 <div className="text-left text-red-500 text-xs mt-1">
@@ -251,34 +235,6 @@ const AddTask = () => {
                 </div>
               )}
             </div>
-
-            {/* Assigned User */}
-            <div className="mb-6 flex flex-col">
-              <label className="text-left text-sm font-medium text-gray-700 mb-2">
-                Assigned To<span className='text-red-500 font-bold'>*</span>
-              </label>
-              <select
-                name="userId"
-                value={formData.userId}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border ${
-                  formErrors.userId ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
-              >
-                <option value="">Select a user</option>
-                {users && users.map(user => (
-                  <option key={user._id} value={user._id}>
-                    {user.name || user.email}
-                  </option>
-                ))}
-              </select>
-              {formErrors.userId && (
-                <div className="text-left text-red-500 text-xs mt-1">
-                  {formErrors.userId}
-                </div>
-              )}
-            </div>
-
             {/* Time Fields in a flex row */}
             <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Start Time */}

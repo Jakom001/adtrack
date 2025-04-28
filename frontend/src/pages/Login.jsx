@@ -23,7 +23,7 @@ const Login = () => {
         // Redirect if already authenticated
         if (isAuthenticated) {
             setSuccess("Already logged in. Redirecting...");
-            setTimeout(() => navigate("/home"), 2000);
+            setTimeout(() => navigate("/dashboard"), 2000);
         }
         
         // Clean up errors when component unmounts

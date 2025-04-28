@@ -50,7 +50,7 @@ const taskSchema = Joi.object({
     title: Joi.string().required(),
     description: Joi.string().optional(),
     comment: Joi.string().optional(),
-    status: Joi.string().required(),
+    status: Joi.string().required().valid('Pending', 'Completed', 'In_progress'),
     categoryId: Joi.string().required(),
     projectId: Joi.string().required(),
     startTime: Joi.date().optional(),

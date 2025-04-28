@@ -27,7 +27,7 @@ function CategoryContextProvider({ children }) {
     setLoading(true);
     setError(null);
     const result = await categoryService.getCategories();
-    console.log(result)
+    
     if (result.data) {
       setCategories(result.data);
     } else {

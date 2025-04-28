@@ -45,8 +45,13 @@ const Navbar = () => {
   return (
     <div className='w-screen flex justify-between items-center bg-white fixed top-0 z-40'>
       <div className="flex h-[80px] items-center p-4">
-        <h1 className='pl-4 text-xl font-bold'>AdTrack</h1>
+        <Link to='/' className='pl-4 text-xl font-bold'>AdTrack</Link>
       </div>
+      {isAuthenticated && (
+        <h1 className="text-xl font-bold bg-gradient-to-r from-primary  to-secondary bg-clip-text text-transparent">
+        Hi {currentUser?.firstName || 'User'}
+        </h1>
+      )}
       
       <nav className='p-4'>
         <div className='flex gap-4 items-center'>

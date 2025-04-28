@@ -1,21 +1,17 @@
-import React from 'react'
-import { Outlet } from 'react-router-dom'
-
+import React from 'react';
+import { Outlet } from 'react-router-dom';
 
 const MainLayout = () => {
   return (
-    <div className='flex h-screen '> 
-      
-      
-      
+    <div className="flex min-h-screen pt-[80px]"> {/* Changed h-screen to min-h-screen for better content handling */}
       {/* Main Content Area */}
-      <div className="flex-1 ml-64 overflow-y-auto"> {/* ml-64 to offset the sidebar width */}
-        <main className="p-6">
+      <div className="flex-1 w-full overflow-y-auto">
+        <main className="p-6 w-full">
           <Outlet />
         </main>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MainLayout
+export default MainLayout;

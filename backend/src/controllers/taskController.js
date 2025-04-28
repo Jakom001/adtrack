@@ -11,11 +11,11 @@ const allTasks = async (req, res) => {
             .sort({ createdAt: -1 })
             .populate([
                 {
-                    path: 'categoryId',
+                    path: 'category',
                     select: 'title'
                 },
                 {
-                    path: 'projectId',
+                    path: 'project',
                     select: 'title'
                 }
             ]);
@@ -33,6 +33,52 @@ const allTasks = async (req, res) => {
         res.status(404).json({
             status: 'false',
             error: "Error getting the tasks"
+        });
+    }
+}
+
+const singleTask = async (req, res) => {
+    try {
+        const id  = req.params.id
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: 'Invalid  ID format' });
+        }
+        const task = await Task.findById(
+            {
+                _id:id,
+                user: req.user.userId })
+            .sort({ createdAt: -1 })
+            .populate([
+                {
+                    path: 'category',
+                    select: 'title'
+                },
+                {
+                    path: 'project',
+                    select: 'title'
+                }
+            ]
+
+        );
+        
+        if (!task) {
+            return res.status(404).json({
+                status: 'false',
+                error: "task not found"
+            });
+        }
+        res.status(200).json({
+            status: 'true',
+            message: 'Task fetched successfully',
+            data: {
+                task
+            }
+        });
+    } catch (error) {
+        console.log("Single Task error", error);
+        res.status(404).json({
+            status: 'false',
+            error: "Error getting the task"
         });
     }
 }
@@ -67,7 +113,7 @@ const searchTasks = async (req, res) => {
         status: 'true',
         length: tasks.length,
         message: 'Tasks search completed',
-        data: categories
+        data: tasks
       });
     } catch (error) {
       console.log("Search Tasks error", error);
@@ -103,9 +149,9 @@ const addTask = async (req, res) => {
         if(!checkProject){
             return res.status(404).json({success:false, error: "Invalid  project Id"})
         }
-        const checkCategory = await Category.findById(projectId)
+        const checkCategory = await Category.findById(categoryId)
         if(!checkCategory){
-            return res.status(404).json({success:false, error: "Invalid  project Id"})
+            return res.status(404).json({success:false, error: "Invalid  category Id"})
         }
         const loginUser = await Auth.findById(userId)
         if(!loginUser){
@@ -160,45 +206,6 @@ const addTask = async (req, res) => {
 }
 
 
-const singleTask = async (req, res) => {
-    try {
-        const task = await Task.findOne({ 
-            id: req.params.id,
-            user: req.user.userId
-        }).populate([
-            {
-                path: 'categoryId',
-                select: 'title'
-            },
-            {
-                path: 'projectId',
-                select: 'title'
-            }
-        ]);
-        
-        if (!task) {
-            return res.status(404).json({
-                status: 'false',
-                error: "Task not found"
-            });
-        }
-        
-        res.status(200).json({
-            status: 'true',
-            message: 'Task fetched successfully',
-            data: {
-                task
-            }
-        });
-    } catch (error) {
-        console.log("Single Task error", error);
-        res.status(404).json({
-            status: 'false',
-            error: "Error getting the task"
-        });
-    }
-}
-
 const updateTask = async (req, res) => {
     const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime, userId} = req.body;
     
@@ -224,9 +231,9 @@ const updateTask = async (req, res) => {
         if(!checkProject){
             return res.status(404).json({success:false, error: "Invalid  project Id"})
         }
-        const checkCategory = await Category.findById(projectId)
+        const checkCategory = await Category.findById(categoryId)
         if(!checkCategory){
-            return res.status(404).json({success:false, error: "Invalid  project Id"})
+            return res.status(404).json({success:false, error: "Invalid  category Id"})
         }
         const loginUser = await Auth.findById(userId)
         if(!loginUser){
@@ -252,10 +259,13 @@ const updateTask = async (req, res) => {
         
         // Set status to completed if endTime is provided
         const updatedStatus = endTime ? 'Completed' : (status || 'In Progress');
-        
+        const id  = req.params.id
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: 'Invalid  ID format' });
+        }
         const task = await Task.findOneAndUpdate(
             { 
-                _id: req.params.id,
+                _id:id,
                 user: req.user.userId
             }, 
             {
@@ -268,6 +278,7 @@ const updateTask = async (req, res) => {
                 endTime,
                 breakTime,
                 duration,
+                user: userId,
                 status: updatedStatus,
             }, 
             {

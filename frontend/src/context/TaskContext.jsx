@@ -27,7 +27,7 @@ function TaskContextProvider({ children }) {
     setLoading(true);
     setError(null);
     const result = await taskService.getTasks();
-    console.log(result)
+
     if (result.data) {
       setTasks(result.data);
     } else {
@@ -73,7 +73,6 @@ function TaskContextProvider({ children }) {
     };
     
     const result = await taskService.addTask(taskWithUserId);
-    
     setLoading(false);
     
     if (result.data) {

@@ -27,7 +27,7 @@ function ProjectContextProvider({ children }) {
     setLoading(true);
     setError(null);
     const result = await projectService.getProjects();
-    console.log(result)
+
     if (result.data) {
       setProjects(result.data);
     } else {

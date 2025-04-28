@@ -56,10 +56,10 @@ const AddCategory = () => {
       }, 2000);
     }
   };
-
+// w-full max-w-4xl mx-auto
   return (
-    <div className='flex flex-col justify-center items-center min-h-screen text-center bg-gray-50'>
-      <div className="max-w-3xl w-full">
+    <div className='mx-auto max-w-xl text-center bg-gray-50'>
+   
         <div className="bg-white p-12 rounded-2xl shadow-2xl transition-all duration-300 hover:translate-y-[-3px]">
           <div className="flex flex-col items-center justify-center gap-3 mb-6">
             <h1 className='text-2xl font-bold text-gray-900'>Add Category</h1>
@@ -140,7 +140,7 @@ const AddCategory = () => {
             </div>
           </form>
         </div>
-      </div>
+
     </div>
   );
 };

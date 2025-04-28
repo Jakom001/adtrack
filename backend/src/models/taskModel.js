@@ -23,12 +23,12 @@ const taskSchema = new mongoose.Schema({
         trim:true,
         lowercase: true,
     },
-    categoryId: {
+    category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category',
         required: true
     },
-    projectId:{
+    project:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Project',
         required: true
@@ -50,7 +50,7 @@ const taskSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'In Progress', 'Completed'],
+        enum: ['Pending', 'In_progress', 'Completed'],
         default: 'Pending'
     },
    

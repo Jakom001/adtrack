@@ -21,7 +21,7 @@ const TaskList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [isSearching, setIsSearching] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState('all');
 
   // Debounced search function
   const debouncedSearch = useCallback(
@@ -83,48 +83,15 @@ const TaskList = () => {
   const handleStatusChange = async (id, newStatus) => {
     await updateTaskStatus(id, newStatus);
   };
-
-  // Handle timer actions (start/pause)
-  const handleTimerAction = async (task) => {
-    const currentTime = new Date();
-    
-    if (!task.startTime || task.status === 'pending') {
-      // Start the timer
-      await updateTaskStatus(task._id, 'in-progress', {
-        startTime: currentTime,
-        status: 'in-progress'
-      });
-    } else if (task.status === 'in-progress') {
-      // Pause the timer
-      let breakTime = task.breakTime ? parseFloat(task.breakTime) : 0;
-      if (task.endTime) {
-        const endDate = new Date(task.endTime);
-        const diffInMinutes = (currentTime - endDate) / (1000 * 60);
-        breakTime += diffInMinutes;
-      }
-      
-      await updateTaskStatus(task._id, 'paused', {
-        endTime: currentTime,
-        breakTime: breakTime.toString(),
-        status: 'paused'
-      });
-    } else if (task.status === 'paused') {
-      // Resume the timer
-      await updateTaskStatus(task._id, 'in-progress', {
-        endTime: null,
-        status: 'in-progress'
-      });
-    }
+  
+  // Handle tab change
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    setCurrentPage(1);
   };
 
   // Handle page change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  // Handle status filter change
-  const handleStatusFilterChange = (e) => {
-    setStatusFilter(e.target.value);
-    setCurrentPage(1);
-  };
 
   // Format duration time
   const formatDuration = (startTime, endTime, breakTime) => {
@@ -148,14 +115,12 @@ const TaskList = () => {
   // Get status badge color
   const getStatusBadgeColor = (status) => {
     switch (status) {
-      case 'pending':
+      case 'Pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'in-progress':
+      case 'In_Progress':
         return 'bg-blue-100 text-blue-800';
-      case 'completed':
+      case 'Completed':
         return 'bg-green-100 text-green-800';
-      case 'paused':
-        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -167,9 +132,9 @@ const TaskList = () => {
     
     let filteredTasks = [...tasks];
     
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filteredTasks = filteredTasks.filter(task => task.status === statusFilter);
+    // Apply status filter based on active tab
+    if (activeTab !== 'all') {
+      filteredTasks = filteredTasks.filter(task => task.status === activeTab);
     }
     
     // Apply sorting
@@ -186,7 +151,7 @@ const TaskList = () => {
     }
     
     setDisplayedTasks(filteredTasks);
-  }, [tasks, sortConfig, statusFilter]);
+  }, [tasks, sortConfig, activeTab]);
 
   // Calculate pagination indexes
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -267,32 +232,25 @@ const TaskList = () => {
     return buttons;
   };
 
+  // Count tasks by status
+  const getTaskCountByStatus = (status) => {
+    if (!tasks.length) return 0;
+    if (status === 'all') return tasks.length;
+    return tasks.filter(task => task.status === status).length;
+  };
+
   return (
     <div className="p-5 bg-white rounded-lg shadow">
       <h2 className="text-xl font-semibold text-gray-800 mb-5">Tasks</h2>
       
-      {/* Search and filter controls */}
+      {/* Search and Add New Task button */}
       <div className="flex flex-col sm:flex-row items-center justify-between mb-5 gap-4">
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <a 
-            href="/tasks/add" 
-            className="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-          >
-            Add New Task
-          </a>
-          
-          <select
-            value={statusFilter}
-            onChange={handleStatusFilterChange}
-            className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="in-progress">In Progress</option>
-            <option value="paused">Paused</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
+        <a 
+          href="/tasks/add" 
+          className="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+        >
+          Add New Task
+        </a>
         
         <div className="relative w-full sm:w-auto max-w-md">
           <div className="flex items-center">
@@ -316,6 +274,64 @@ const TaskList = () => {
             )}
           </div>
         </div>
+      </div>
+      
+      {/* Status Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="flex flex-wrap -mb-px">
+          <button
+            onClick={() => handleTabChange('all')}
+            className={`inline-flex items-center py-2 px-4 font-medium text-sm border-b-2 ${
+              activeTab === 'all'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            All 
+            <span className="ml-2 bg-gray-100 text-gray-700 py-0.5 px-2 rounded-full text-xs">
+              {getTaskCountByStatus('all')}
+            </span>
+          </button>
+          <button
+            onClick={() => handleTabChange('Pending')}
+            className={`inline-flex items-center py-2 px-4 font-medium text-sm border-b-2 ${
+              activeTab === 'Pending'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Pending
+            <span className="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2 rounded-full text-xs">
+              {getTaskCountByStatus('Pending')}
+            </span>
+          </button>
+          <button
+            onClick={() => handleTabChange('In_Progress')}
+            className={`inline-flex items-center py-2 px-4 font-medium text-sm border-b-2 ${
+              activeTab === 'In_Progress'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            In Progress
+            <span className="ml-2 bg-blue-100 text-blue-800 py-0.5 px-2 rounded-full text-xs">
+              {getTaskCountByStatus('In_Progress')}
+            </span>
+          </button>
+          <button
+            onClick={() => handleTabChange('Completed')}
+            className={`inline-flex items-center py-2 px-4 font-medium text-sm border-b-2 ${
+              activeTab === 'Completed'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Completed
+            <span className="ml-2 bg-green-100 text-green-800 py-0.5 px-2 rounded-full text-xs">
+              {getTaskCountByStatus('Completed')}
+            </span>
+          </button>
+        </nav>
       </div>
       
       {loading ? (
@@ -386,7 +402,7 @@ const TaskList = () => {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(task.status)}`}>
-                          {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                          {task.status === 'In_Progress' ? 'In Progress' : task.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
@@ -399,28 +415,6 @@ const TaskList = () => {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                         <div className="flex flex-col sm:flex-row gap-2">
-                          <button
-                            onClick={() => handleTimerAction(task)}
-                            className={`flex items-center justify-center px-3 py-1 rounded-md focus:outline-none focus:ring-2 ${
-                              task.status === 'in-progress'
-                                ? 'bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-500'
-                                : 'bg-primary text-white hover:bg-green-700 focus:ring-green-500'
-                            }`}
-                          >
-                            {task.status === 'in-progress' ? (
-                              <>
-                                <FaPause className="mr-1" />
-                                <span className="hidden sm:inline">Pause</span>
-                              </>
-                            ) : (
-                              <>
-                                <FaPlay className="mr-1" />
-                                <span className="hidden sm:inline">
-                                  {task.status === 'paused' ? 'Resume' : 'Start'}
-                                </span>
-                              </>
-                            )}
-                          </button>
                           <a 
                             href={`/tasks/edit/${task._id}`}
                             className="flex items-center justify-center px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -444,8 +438,8 @@ const TaskList = () => {
                     <td colSpan="6" className="px-6 py-8 text-center text-sm text-gray-500">
                       {isSearching 
                         ? `No tasks found matching "${searchTerm}"`
-                        : statusFilter !== 'all'
-                          ? `No ${statusFilter} tasks found`
+                        : activeTab !== 'all'
+                          ? `No ${activeTab === 'In_Progress' ? 'In Progress' : activeTab} tasks found`
                           : "No tasks found"}
                     </td>
                   </tr>

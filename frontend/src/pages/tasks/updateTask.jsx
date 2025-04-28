@@ -3,15 +3,13 @@ import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useTaskContext } from '../../context/TaskContext';
 import { useProjectContext } from '../../context/ProjectContext';
 import { useCategoryContext } from '../../context/CategoryContext';
-import { useAuthContext } from '../../context/AuthContext';
 
 const UpdateTask = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { updateTask, getSingleTask, loading, error, clearError } = useTaskContext();
-  const { projects, fetchProjects } = useProjectContext();
-  const { categories, fetchCategories } = useCategoryContext();
-  const { users, fetchUsers } = useAuthContext();
+  const { projects } = useProjectContext();
+  const { categories} = useCategoryContext();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -22,7 +20,6 @@ const UpdateTask = () => {
     projectId: '',
     startTime: '',
     endTime: '',
-    userId: '',
     breakTime: ''
   });
   
@@ -30,30 +27,23 @@ const UpdateTask = () => {
   const [formErrors, setFormErrors] = useState({});
   const [fetchLoading, setFetchLoading] = useState(true);
 
-  // Fetch required data for select fields
-  useEffect(() => {
-    fetchProjects();
-    fetchCategories();
-    fetchUsers();
-  }, []);
 
   // Fetch the task data when component mounts
   useEffect(() => {
     const fetchTask = async () => {
       setFetchLoading(true);
       const result = await getSingleTask(id);
-      
+      console.log(result)
       if (result.data) {
         setFormData({
           title: result.data.title || '',
           description: result.data.description || '',
           comment: result.data.comment || '',
-          status: result.data.status || 'pending',
+          status: result.data.status || 'Pending',
           categoryId: result.data.categoryId || '',
           projectId: result.data.projectId || '',
           startTime: result.data.startTime ? new Date(result.data.startTime).toISOString().slice(0, 16) : '',
           endTime: result.data.endTime ? new Date(result.data.endTime).toISOString().slice(0, 16) : '',
-          userId: result.data.userId || '',
           breakTime: result.data.breakTime || ''
         });
       } else {
@@ -83,10 +73,6 @@ const UpdateTask = () => {
     
     if (!formData.projectId) {
       newErrors.projectId = "Project is required";
-    }
-    
-    if (!formData.userId) {
-      newErrors.userId = "User is required";
     }
     
     // Validate start and end time if both are provided
@@ -243,7 +229,7 @@ const UpdateTask = () => {
                 <option value="">Select a category</option>
                 {categories && categories.map(category => (
                   <option key={category._id} value={category._id}>
-                    {category.name}
+                    {category.title}
                   </option>
                 ))}
               </select>
@@ -267,10 +253,9 @@ const UpdateTask = () => {
                   formErrors.status ? 'border-red-500' : 'border-gray-300'
                 } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
               >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="Pending">Pending</option>
+                <option value="In_progress">In Progress</option>
+                <option value="Completed">Completed</option>
               </select>
               {formErrors.status && (
                 <div className="text-left text-red-500 text-xs mt-1">
@@ -279,32 +264,7 @@ const UpdateTask = () => {
               )}
             </div>
 
-            {/* Assigned User */}
-            <div className="mb-6 flex flex-col">
-              <label className="text-left text-sm font-medium text-gray-700 mb-2">
-                Assigned To<span className='text-red-500 font-bold'>*</span>
-              </label>
-              <select
-                name="userId"
-                value={formData.userId}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border ${
-                  formErrors.userId ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
-              >
-                <option value="">Select a user</option>
-                {users && users.map(user => (
-                  <option key={user._id} value={user._id}>
-                    {user.name || user.email}
-                  </option>
-                ))}
-              </select>
-              {formErrors.userId && (
-                <div className="text-left text-red-500 text-xs mt-1">
-                  {formErrors.userId}
-                </div>
-              )}
-            </div>
+           
 
             {/* Time Fields in a flex row */}
             <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
