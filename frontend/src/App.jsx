@@ -25,6 +25,9 @@ import ProjectList from './pages/projects/ProjectList';
 import AddProject from './pages/projects/AddProject';
 import UpdateProject from './pages/projects/UpdateProject';
 import { ProjectContextProvider } from './context/ProjectContext';
+import TaskList from './pages/tasks/TaskList';
+import AddTask from './pages/tasks/AddTask';
+import UpdateTask from './pages/tasks/updateTask';
 
 AOS.init({ once: false });
 
@@ -68,6 +71,14 @@ function App() {
               <Route path="add" element={<AddProject />} />
               <Route path="edit/:id" element={<UpdateProject />} />
             </Route>
+
+            {/* Tasks Routes */}
+            <Route path='/today'>
+              <Route index element={<TaskList/>}/>
+              <Route path='add' element={<AddTask/>}/>
+              <Route path="edit/:id" element={<UpdateTask />} />
+            </Route>
+
           </Route>
         </Route>
         
