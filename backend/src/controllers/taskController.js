@@ -79,12 +79,12 @@ const searchTasks = async (req, res) => {
   };
 
 const addTask = async (req, res) => {
-    const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime, priority, userId} = req.body;
+    const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime,  userId} = req.body;
     
     try {
         const { error } = taskSchema.validate({ 
             title, description, categoryId, projectId, startTime, 
-            endTime, breakTime, priority, comment, userId, status, 
+            endTime, breakTime,  comment, userId, status, 
         });
         
         if (error) {
@@ -140,7 +140,6 @@ const addTask = async (req, res) => {
             breakTime,
             duration,
             status,
-            priority,
             user:userId
         });
         
@@ -201,12 +200,12 @@ const singleTask = async (req, res) => {
 }
 
 const updateTask = async (req, res) => {
-    const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime, priority, userId} = req.body;
+    const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime, userId} = req.body;
     
     try {
         const { error } = taskSchema.validate({ 
             title, description, categoryId, projectId, startTime, 
-            endTime, breakTime, priority, comment, userId, status, 
+            endTime, breakTime, comment, userId, status, 
         });
         
         if (error) {
@@ -270,7 +269,6 @@ const updateTask = async (req, res) => {
                 breakTime,
                 duration,
                 status: updatedStatus,
-                priority,
             }, 
             {
                 new: true,
