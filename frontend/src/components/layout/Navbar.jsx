@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import { useAuthContext } from '../../context/AuthContext'
 import {Link} from 'react-router-dom'
-import { LogOut, Moon, Sun, SwitchCamera } from 'lucide-react';
+import { LogOut, Moon, Sun, Sunrise, Sunset, SwitchCamera } from 'lucide-react';
 
 const Navbar = () => {
   const { isAuthenticated, logout, currentUser } = useAuthContext();
@@ -42,6 +42,13 @@ const Navbar = () => {
     setUserToggle(toggle => !toggle);
   };
 
+  const greetingText = () =>{
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good Morning,'
+    if (hour < 16) return 'Good Afternoon,'
+    return 'Good Morning,'
+  }
+
   return (
     <div className='w-screen flex justify-between items-center bg-white fixed top-0 z-40'>
       <div className="flex h-[80px] items-center p-4">
@@ -49,7 +56,7 @@ const Navbar = () => {
       </div>
       {isAuthenticated && (
         <h1 className="text-xl font-bold bg-gradient-to-r from-primary  to-secondary bg-clip-text text-transparent">
-        Hi {currentUser?.firstName || 'User'}
+        {greetingText()} {currentUser?.firstName || 'User'}
         </h1>
       )}
       

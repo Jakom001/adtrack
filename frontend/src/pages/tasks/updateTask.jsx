@@ -33,7 +33,6 @@ const UpdateTask = () => {
     const fetchTask = async () => {
       setFetchLoading(true);
       const result = await getSingleTask(id);
-      console.log(result)
       if (result.data) {
         setFormData({
           title: result.data.title || '',
