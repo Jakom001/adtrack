@@ -48,15 +48,14 @@ const projectSchema = Joi.object({
 
 const taskSchema = Joi.object({
     title: Joi.string().required(),
-    description: Joi.string().optional(),
-    comment: Joi.string().optional(),
-    status: Joi.string().required().valid('Pending', 'Completed', 'In_progress'),
+    description: Joi.string().allow('', null).optional(),
+    comment: Joi.string().allow('', null).optional(),
     categoryId: Joi.string().required(),
     projectId: Joi.string().required(),
-    startTime: Joi.date().optional(),
-    endTime: Joi.date().optional(),
+    startTime: Joi.date().allow('', null).optional(),
+    endTime: Joi.date().allow('', null).optional(),
     userId: Joi.string().required(),
-    breakTime: Joi.string().optional(),
+    breakTime: Joi.number().allow('', null).optional(),
 })
 
 const companyValidator = Joi.object({

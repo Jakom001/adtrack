@@ -14,7 +14,6 @@ const taskSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: true,
         trim:true,
         lowercase: true,
     },
@@ -35,11 +34,9 @@ const taskSchema = new mongoose.Schema({
     },
     startTime: {
         type: Date,
-        
-
     },
     endTime: {
-        type: Date
+        type: Date,
     },
     breakTime: {
         type: Number,
@@ -50,10 +47,9 @@ const taskSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'In_progress', 'Completed'],
+        enum: ['Pending', 'Completed'],
         default: 'Pending'
     },
-   
 }, { timestamps: true });
 
 const Task = mongoose.model('Task', taskSchema);

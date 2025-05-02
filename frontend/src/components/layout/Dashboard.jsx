@@ -17,7 +17,7 @@ const Dashboard = () => {
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    status: 'In Progress',
+    status: 'Pending',
     projectId: '',
     categoryId: '',
     startTime: new Date().toISOString(),
@@ -55,12 +55,12 @@ const Dashboard = () => {
   // Calculate summary statistics
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(task => task.status === 'Completed').length;
-  const inProgressTasks = tasks.filter(task => task.status === 'In Progress').length;
+  const pendingTasks = tasks.filter(task => task.status === 'Pending').length;
   
   // Prepare data for charts
   const statusData = [
     { name: 'Completed', value: completedTasks },
-    { name: 'In Progress', value: inProgressTasks },
+    { name: 'Pending', value: pendingTasks },
   ];
 
   // Project distribution data
@@ -80,7 +80,7 @@ const Dashboard = () => {
     setNewTask({
       title: '',
       description: '',
-      status: 'In Progress',
+      status: 'Pending',
       projectId: '',
       categoryId: '',
       startTime: new Date().toISOString(),
@@ -90,7 +90,7 @@ const Dashboard = () => {
 
   // Handle task status toggle
   const handleStatusToggle = async (taskId, currentStatus) => {
-    const newStatus = currentStatus === 'Completed' ? 'In Progress' : 'Completed';
+    const newStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
     await updateTask(taskId, { status: newStatus });
     fetchTasks();
   };
@@ -169,8 +169,8 @@ const Dashboard = () => {
                 <Clock className="w-6 h-6" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-500 font-medium">In Progress</p>
-                <h3 className="text-2xl font-bold">{inProgressTasks}</h3>
+                <p className="text-sm text-gray-500 font-medium">Pending</p>
+                <h3 className="text-2xl font-bold">{pendingTasks}</h3>
               </div>
             </div>
           </div>
@@ -251,7 +251,7 @@ const Dashboard = () => {
                 >
                   <option value="All">All Statuses</option>
                   <option value="Completed">Completed</option>
-                  <option value="In Progress">In Progress</option>
+                  <option value="Pending">Pending</option>
                 </select>
                 
                 <select

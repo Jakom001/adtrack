@@ -7,20 +7,19 @@ import { useCategoryContext } from '../../context/CategoryContext';
 const AddTask = () => {
   const navigate = useNavigate();
   const { addTask, loading, error, clearError } = useTaskContext();
-  const { projects} = useProjectContext();
+  const { projects } = useProjectContext();
   const { categories } = useCategoryContext();
 
-  
+  // Initialize form with null values for optional fields instead of empty strings
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
-    comment: '',
-    status: 'Pending', // Default status
+    description: null,
+    comment: null,
     categoryId: '',
     projectId: '',
-    startTime: '',
-    endTime: '',
-    breakTime: ''
+    startTime: null,
+    endTime: null,
+    breakTime: null
   });
   
   const [success, setSuccess] = useState('');
@@ -33,10 +32,6 @@ const AddTask = () => {
       newErrors.title = "Title is required";
     }
     
-    if (!formData.status) {
-      newErrors.status = "Status is required";
-    }
-    
     if (!formData.categoryId) {
       newErrors.categoryId = "Category is required";
     }
@@ -44,6 +39,7 @@ const AddTask = () => {
     if (!formData.projectId) {
       newErrors.projectId = "Project is required";
     }
+    
     // Validate start and end time if both are provided
     if (formData.startTime && formData.endTime) {
       const start = new Date(formData.startTime);
@@ -60,7 +56,11 @@ const AddTask = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    
+    // Handle empty values appropriately
+    const newValue = value.trim() === '' ? null : value;
+    
+    setFormData((prevData) => ({ ...prevData, [name]: newValue }));
 
     // Clear field-specific error when user types
     if (formErrors[name]) {
@@ -76,21 +76,27 @@ const AddTask = () => {
     setSuccess("");
     
     if (!validateForm()) return;
+    
+    // Create a payload with proper type handling
+    const payload = {
+      ...formData,
+      // Ensure number fields are properly typed
+      breakTime: formData.breakTime === null ? null : Number(formData.breakTime)
+    };
    
-    const result = await addTask(formData);
+    const result = await addTask(payload);
 
     if (result.data) {
       setSuccess("Task added successfully!");
       setFormData({
         title: '',
-        description: '',
-        comment: '',
-        status: 'Pending',
+        description: null,
+        comment: null,
         categoryId: '',
         projectId: '',
-        startTime: '',
-        endTime: '',
-        breakTime: ''
+        startTime: null,
+        endTime: null,
+        breakTime: null
       });
       
       // Redirect after a short delay
@@ -132,7 +138,7 @@ const AddTask = () => {
                 } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
                 type="text"
                 name="title"
-                value={formData.title}
+                value={formData.title || ''}
                 onChange={handleChange}
                 placeholder="Enter task title"
               />
@@ -150,7 +156,7 @@ const AddTask = () => {
               </label>
               <textarea 
                 name="description"
-                value={formData.description}
+                value={formData.description || ''}
                 onChange={handleChange} 
                 rows="3"
                 placeholder="Enter task description"
@@ -165,7 +171,7 @@ const AddTask = () => {
               </label>
               <select
                 name="projectId"
-                value={formData.projectId}
+                value={formData.projectId || ''}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 border ${
                   formErrors.projectId ? 'border-red-500' : 'border-gray-300'
@@ -192,7 +198,7 @@ const AddTask = () => {
               </label>
               <select
                 name="categoryId"
-                value={formData.categoryId}
+                value={formData.categoryId || ''}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 border ${
                   formErrors.categoryId ? 'border-red-500' : 'border-gray-300'
@@ -211,30 +217,6 @@ const AddTask = () => {
                 </div>
               )}
             </div>
-
-            {/* Status Selection */}
-            <div className="mb-6 flex flex-col">
-              <label className="text-left text-sm font-medium text-gray-700 mb-2">
-                Status<span className='text-red-500 font-bold'>*</span>
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border ${
-                  formErrors.status ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
-              >
-                <option value="Pending">Pending</option>
-                <option value="In_progress">In Progress</option>
-                <option value="Completed">Completed</option>
-              </select>
-              {formErrors.status && (
-                <div className="text-left text-red-500 text-xs mt-1">
-                  {formErrors.status}
-                </div>
-              )}
-            </div>
             {/* Time Fields in a flex row */}
             <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Start Time */}
@@ -245,7 +227,7 @@ const AddTask = () => {
                 <input
                   type="datetime-local"
                   name="startTime"
-                  value={formData.startTime}
+                  value={formData.startTime || ''}
                   onChange={handleChange}
                   className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
                 />
@@ -259,7 +241,7 @@ const AddTask = () => {
                 <input
                   type="datetime-local"
                   name="endTime"
-                  value={formData.endTime}
+                  value={formData.endTime || ''}
                   onChange={handleChange}
                   className={`w-full px-3 py-2 border ${
                     formErrors.endTime ? 'border-red-500' : 'border-gray-300'
@@ -281,7 +263,7 @@ const AddTask = () => {
               <input
                 type="number"
                 name="breakTime"
-                value={formData.breakTime}
+                value={formData.breakTime || ''}
                 onChange={handleChange}
                 placeholder="Enter break time"
                 className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
@@ -295,7 +277,7 @@ const AddTask = () => {
               </label>
               <textarea 
                 name="comment"
-                value={formData.comment}
+                value={formData.comment || ''} 
                 onChange={handleChange} 
                 rows="2"
                 placeholder="Add any comments about this task"

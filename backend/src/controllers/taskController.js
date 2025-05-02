@@ -123,70 +123,101 @@ const searchTasks = async (req, res) => {
       });
     }
   };
-
-const addTask = async (req, res) => {
-    const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime,  userId} = req.body;
+        // Add Task
+  const addTask = async (req, res) => {
+    const { title, description, comment, categoryId, projectId, startTime, endTime, breakTime, userId } = req.body;
     
     try {
-        const { error } = taskSchema.validate({ 
-            title, description, categoryId, projectId, startTime, 
-            endTime, breakTime,  comment, userId, status, 
-        });
+        // Create a sanitized object for validation, converting empty strings to null
+        const dataToValidate = {
+            title, 
+            description: description || null,
+            comment: comment || null,
+            categoryId, 
+            projectId, 
+            startTime: startTime || null, 
+            endTime: endTime || null, 
+            breakTime: breakTime === '' ? null : Number(breakTime),
+            userId
+        };
+        
+        const { error } = taskSchema.validate(dataToValidate);
         
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
         }
+        
+        // ID validations
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-                    return res.status(400).json({ error: 'Invalid user ID format' });
+            return res.status(400).json({ error: 'Invalid user ID format' });
         }
         if (!mongoose.Types.ObjectId.isValid(categoryId)) {
             return res.status(400).json({ error: 'Invalid category ID format' });
         }
         if (!mongoose.Types.ObjectId.isValid(projectId)) {
-            return res.status(400).json({ error: 'Invalid category ID format' });
+            return res.status(400).json({ error: 'Invalid project ID format' });
         }
+        
+        // Entity validations
         const checkProject = await Project.findById(projectId)
-        if(!checkProject){
-            return res.status(404).json({success:false, error: "Invalid  project Id"})
+        if(!checkProject) {
+            return res.status(404).json({success: false, error: "Invalid project Id"})
         }
+        
         const checkCategory = await Category.findById(categoryId)
-        if(!checkCategory){
-            return res.status(404).json({success:false, error: "Invalid  category Id"})
+        if(!checkCategory) {
+            return res.status(404).json({success: false, error: "Invalid category Id"})
         }
+        
         const loginUser = await Auth.findById(userId)
-        if(!loginUser){
-            return res.status(404).json({success:false, error: "Invalid login user"})
+        if(!loginUser) {
+            return res.status(404).json({success: false, error: "Invalid login user"})
         }
-        let duration;
-        if (endTime) {
+        
+        // Time and duration calculations
+        let duration = null;
+        if (startTime && endTime) {
             const start = new Date(startTime);
             const end = new Date(endTime);
-            // Duration in milliseconds minus break time (converted to milliseconds)
-            duration = (end - start) - (breakTime * 60 * 1000);
             
-            // Ensure duration is not negative
-            if (duration < 0) {
-                return res.status(400).json({ error: 'End time must be after start time, accounting for breaks' });
+            // Make sure dates are valid
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                return res.status(400).json({ error: 'Invalid date format for start or end time' });
             }
-            // Convert to hours
-            duration = Math.floor(duration / (24 * 60 * 1000));
+            
+            // Check if end time is after start time
+            if (end <= start) {
+                return res.status(400).json({ error: 'End time must be after start time' });
+            }
+            
+            // Calculate duration (in hours)
+            const breakTimeMs = (breakTime ? Number(breakTime) : 0) * 60 * 1000;
+            const durationMs = end.getTime() - start.getTime() - breakTimeMs;
+            
+            // Ensure duration is not negative after subtracting break time
+            if (durationMs < 0) {
+                return res.status(400).json({ error: 'Break time cannot exceed the difference between start and end time' });
+            }
+            
+            // Convert to hours (using milliseconds to hours conversion)
+            duration = Math.floor(durationMs / (60 * 60 * 1000));
         }
         
-        // Set status based on endTime
-        // const status = endTime ? 'Completed' : 'In Progress';
+        const status = endTime ? 'Completed' : 'Pending';
         
+        // Create the task
         const newTask = await Task.create({
             title,
-            description,
-            comment,
+            description: description || undefined,
+            comment: comment || undefined,
             category: categoryId,
             project: projectId,
-            startTime,
-            endTime,
-            breakTime,
+            startTime: startTime || undefined,
+            endTime: endTime || undefined,
+            breakTime: breakTime === '' ? 0 : Number(breakTime),
             duration,
             status,
-            user:userId
+            user: userId
         });
         
         res.status(201).json({
@@ -200,11 +231,11 @@ const addTask = async (req, res) => {
         console.log("Create Task error", error);
         res.status(400).json({
             status: 'false',
-            message: "Error creating the task"
+            message: "Error creating the task",
+            error: error.message // Include the actual error message for debugging
         });
     }
 }
-
 
 const updateTask = async (req, res) => {
     const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime, userId} = req.body;
@@ -258,7 +289,7 @@ const updateTask = async (req, res) => {
         }
         
         // Set status to completed if endTime is provided
-        const updatedStatus = endTime ? 'Completed' : (status || 'In Progress');
+        const updatedStatus = endTime ? 'Completed' : (status || 'Pending');
         const id  = req.params.id
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: 'Invalid  ID format' });
@@ -334,121 +365,6 @@ const deleteTask = async (req, res) => {
         res.status(404).json({
             status: 'false',
             error: "Error deleting the task"
-        });
-    }
-}
-
-const completeTask = async (req, res) => {
-    const { endTime, breakTime } = req.body;
-    
-    try {
-        if (!endTime) {
-            return res.status(400).json({ error: 'End time is required to complete an task' });
-        }
-        
-        const task = await Task.findOne({ 
-            _id: req.params.id,
-            user: req.user._id
-        });
-        
-        if (!task) {
-            return res.status(404).json({
-                status: 'false',
-                error: "Task not found or you don't have permission to update it"
-            });
-        }
-        
-        const start = new Date(task.startTime);
-        const end = new Date(endTime);
-        const breakDuration = breakTime || task.breakTime || 0;
-        
-        // Duration in milliseconds minus break time (converted to milliseconds)
-        const duration = (end - start) - (breakDuration * 60 * 1000);
-        
-        // Ensure duration is not negative
-        if (duration < 0) {
-            return res.status(400).json({ error: 'End time must be after start time, accounting for breaks' });
-        }
-        
-        // Convert to minutes
-        const durationInMinutes = Math.floor(duration / (60 * 1000));
-        
-        const updatedTask = await Task.findByIdAndUpdate(
-            req.params.id, 
-            {
-                endTime,
-                breakTime: breakDuration,
-                duration: durationInMinutes,
-                status: 'Completed',
-            }, 
-            {
-                new: true,
-                runValidators: true
-            }
-        );
-        
-        res.status(200).json({
-            status: 'true',
-            message: "Task completed successfully",
-            data: {
-                task: updatedTask
-            }
-        });
-    } catch (error) {
-        console.log("Complete Task error", error);
-        res.status(400).json({
-            status: 'false',
-            error: "Error completing the task"
-        });
-    }
-}
-
-const getTaskStats = async (req, res) => {
-    try {
-        // Get tasks for the logged-in user
-        const tasks = await Task.find({ 
-            user: req.user._id,
-            status: 'Completed' // Only include completed tasks for stats
-        });
-        
-        // Calculate total time spent
-        const totalDuration = tasks.reduce((total, task) => {
-            return total + (task.duration || 0);
-        }, 0);
-        
-        // Calculate time spent by category
-        const categoryStats = await Task.aggregate([
-            { $match: { user: req.user._id, status: 'Completed' } },
-            { $group: { _id: '$categoryId', totalDuration: { $sum: '$duration' } } },
-            { $lookup: { from: 'categories', localField: '_id', foreignField: '_id', as: 'category' } },
-            { $unwind: '$category' },
-            { $project: { category: '$category.title', totalDuration: 1 } }
-        ]);
-        
-        // Calculate time spent by project
-        const projectStats = await Task.aggregate([
-            { $match: { user: req.user._id, status: 'Completed' } },
-            { $group: { _id: '$projectId', totalDuration: { $sum: '$duration' } } },
-            { $lookup: { from: 'projects', localField: '_id', foreignField: '_id', as: 'project' } },
-            { $unwind: '$project' },
-            { $project: { project: '$project.title', totalDuration: 1 } }
-        ]);
-        
-        res.status(200).json({
-            status: 'true',
-            message: 'Task statistics fetched successfully',
-            data: {
-                totalTasks: tasks.length,
-                totalDuration,
-                categoryStats,
-                projectStats
-            }
-        });
-    } catch (error) {
-        console.log("Task Stats error", error);
-        res.status(400).json({
-            status: 'false',
-            error: "Error fetching task statistics"
         });
     }
 }
