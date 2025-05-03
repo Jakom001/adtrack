@@ -42,8 +42,9 @@ const categorySchema = Joi.object({
 
 const projectSchema = Joi.object({
     title: Joi.string().required(),
-    description: Joi.string().optional(),
-    userId:Joi.string().required()
+    description: Joi.string().allow("").optional(),
+    userId:Joi.string().required(),
+    projectId:Joi.string().required()
 })
 
 const taskSchema = Joi.object({

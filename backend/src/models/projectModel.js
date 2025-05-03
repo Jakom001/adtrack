@@ -15,6 +15,11 @@ const projectSchema = new mongoose.Schema({
     description: {
         type: String,
         trim: true
+    },
+    categoryId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+        required: true
     }
 }, { timestamps: true });
 

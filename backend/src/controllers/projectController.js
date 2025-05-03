@@ -1,12 +1,14 @@
 import Project from '../models/projectModel.js';
 import { projectSchema } from '../middlewares/validator.js';
 import Auth from '../models/authModel.js'
+import Category from '../models/categoryModel.js';
 import mongoose from 'mongoose'
 const allProjects = async (req, res) => {
     try {
-        const projects = await Project.find().sort({createdAt:-1}).populate({
-            path: 'user',
-            select: 'firstName'
+        const projects = await Project.find().sort({createdAt:-1}).populate(
+            {
+            path: 'category',
+            select: 'title'
         });
         res.status(200).json({
             status: 'true',
@@ -67,25 +69,34 @@ const searchProjects = async (req, res) => {
 
 
 const addProject = async (req, res) => {
-    const {title, description, userId} = req.body
+    const {title, description, userId, categoryId} = req.body
     try {
-        const { error } = projectSchema.validate({title, description, userId});
+        const { error } = projectSchema.validate({title, description, categoryId, userId});
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
         }
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ error: 'Invalid user ID format' });
         }
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            return res.status(400).json({ error: 'Invalid project ID format' });
+        }
+
         if (await Project.findOne({title })) {
             return res.status(400).json({ error: 'Project title already exists' });
         }
         
+        const checkCategory = await Category.findById(catgoryId);
+
+        if (!checkCategory){
+            return res.status(404).json({success:false, error: "invalid category Id"})
+        }
         const loginUser = await Auth.findById(userId)
 
         if(!loginUser){
             return res.status(404).json({success:false, error: "Invalid login user"})
         }
-        const newProject = await Project.create({title, description, user:userId});
+        const newProject = await Project.create({title, description, project:projectId, user:userId});
         res.status(201).json({
             status: 'true', 
             message: 'Project created successfully',
@@ -142,7 +153,6 @@ const updateProject = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ error: 'Invalid ID format' });
         }
-
         const loginUser = await Auth.findById(userId)
         if(!loginUser){
             return res.status(404).json({success:false, error: "Invalid login user"})
