@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTaskContext } from '../../context/TaskContext';
-import { FaSort, FaSortUp, FaSortDown, FaSearch, FaEdit, FaTrash, FaTimes, FaPlay, FaPause } from 'react-icons/fa';
+import { FaSort, FaSortUp, FaSortDown, FaSearch, FaEdit, FaTrash, FaTimes, FaPlay, FaPause, FaExclamationTriangle } from 'react-icons/fa';
 import { debounce } from 'lodash';
 
 const TaskList = () => {
@@ -22,6 +22,7 @@ const TaskList = () => {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, taskId: null, taskTitle: '' });
 
   // Debounced search function
   const debouncedSearch = useCallback(
@@ -74,9 +75,17 @@ const TaskList = () => {
 
   // Handle delete task
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      await deleteTask(id);
-    }
+    await deleteTask(id);
+    setDeleteModal({ isOpen: false, taskId: null, taskTitle: '' });
+  };
+
+  // Open delete confirmation modal
+  const openDeleteModal = (task) => {
+    setDeleteModal({ 
+      isOpen: true, 
+      taskId: task._id, 
+      taskTitle: task.title 
+    });
   };
 
   // Handle status change
@@ -117,8 +126,6 @@ const TaskList = () => {
     switch (status) {
       case 'Pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'In_Progress':
-        return 'bg-blue-100 text-blue-800';
       case 'Completed':
         return 'bg-green-100 text-green-800';
       default:
@@ -305,19 +312,7 @@ const TaskList = () => {
               {getTaskCountByStatus('Pending')}
             </span>
           </button>
-          <button
-            onClick={() => handleTabChange('In_Progress')}
-            className={`inline-flex items-center py-2 px-4 font-medium text-sm border-b-2 ${
-              activeTab === 'In_Progress'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            In Progress
-            <span className="ml-2 bg-blue-100 text-blue-800 py-0.5 px-2 rounded-full text-xs">
-              {getTaskCountByStatus('In_Progress')}
-            </span>
-          </button>
+         
           <button
             onClick={() => handleTabChange('Completed')}
             className={`inline-flex items-center py-2 px-4 font-medium text-sm border-b-2 ${
@@ -380,6 +375,15 @@ const TaskList = () => {
                       <span>{getSortDirectionIcon('startTime')}</span>
                     </div>
                   </th>
+                  <th 
+                    onClick={() => requestSort('endTime')} 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>End Time</span>
+                      <span>{getSortDirectionIcon('endTime')}</span>
+                    </div>
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -401,8 +405,8 @@ const TaskList = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(task.status)}`}>
-                          {task.status === 'In_Progress' ? 'In Progress' : task.status}
+                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeColor(task.status)}`}>
+                          {task.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
@@ -411,6 +415,11 @@ const TaskList = () => {
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
                         {task.startTime 
                           ? new Date(task.startTime).toLocaleString()
+                          : '-'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                        {task.endTime 
+                          ? new Date(task.endTime).toLocaleString()
                           : '-'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
@@ -424,7 +433,7 @@ const TaskList = () => {
                           </a>
                           <button 
                             className="flex items-center justify-center px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                            onClick={() => handleDelete(task._id)}
+                            onClick={() => openDeleteModal(task)}
                           >
                             <FaTrash className="mr-1" /> 
                             <span className="hidden sm:inline">Delete</span>
@@ -435,11 +444,11 @@ const TaskList = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-sm text-gray-500">
+                    <td colSpan="7" className="px-6 py-8 text-center text-sm text-gray-500">
                       {isSearching 
                         ? `No tasks found matching "${searchTerm}"`
                         : activeTab !== 'all'
-                          ? `No ${activeTab === 'In_Progress' ? 'In Progress' : activeTab} tasks found`
+                          ? `No ${activeTab} tasks found`
                           : "No tasks found"}
                     </td>
                   </tr>
@@ -499,6 +508,39 @@ const TaskList = () => {
             </div>
           )}
         </>
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden animate-fadeIn">
+            <div className="bg-red-50 p-4 sm:p-6">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-red-100">
+                <FaExclamationTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-medium text-center text-gray-900 mb-2">Delete Task</h3>
+              <p className="text-sm text-center text-gray-500">
+                Are you sure you want to delete the task "{deleteModal.taskTitle}"? This action cannot be undone.
+              </p>
+            </div>
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row-reverse gap-2">
+              <button
+                type="button"
+                className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                onClick={() => handleDelete(deleteModal.taskId)}
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className="w-full sm:w-auto px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onClick={() => setDeleteModal({ isOpen: false, taskId: null, taskTitle: '' })}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
