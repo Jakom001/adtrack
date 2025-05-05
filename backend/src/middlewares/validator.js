@@ -36,7 +36,7 @@ const acceptFPSchema = Joi.object({
 
 const categorySchema = Joi.object({
     title: Joi.string().required(),
-    description: Joi.string().optional(),
+    description: Joi.string().allow('').optional(),
     userId:Joi.string().required()
 })
 
