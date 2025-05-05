@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useCallback, useMemo, useState } from 'react';
 import { projectService } from '../service/projectService';
 import { useAuthContext } from './AuthContext';
+import { useCategoryContext } from './CategoryContext';
 
 // Create the context
 const ProjectContext = createContext(null);
@@ -21,6 +22,7 @@ function ProjectContextProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { currentUser } = useAuthContext();
+  const { categories } = useCategoryContext();
   
   // All Projects
   const fetchProjects = useCallback(async () => {
@@ -77,23 +79,45 @@ function ProjectContextProvider({ children }) {
     setLoading(false);
     
     if (result.data) {
-      setProjects(prevProjects => [result.data, ...prevProjects]);
+      // Find the category object that matches the categoryId
+      const categoryObj = categories.find(cat => cat._id === projectData.categoryId);
+      
+      // Add the new project with the full category object to the projects list
+      const newProject = {
+        ...result.data,
+        category: categoryObj || { title: "Loading..." } // Fallback in case category isn't found
+      };
+      
+      setProjects(prevProjects => [newProject, ...prevProjects]);
     } else {
       setError(result.error);
     }
     
     return result;
-  }, [currentUser]);
+  }, [currentUser, categories]);
 
   // Update project
   const updateProject = useCallback(async (id, projectData) => {
     const previousProjects = [...projects];
 
-    // Optimistic update
+    // Get the category object for the new categoryId if it's being updated
+    const categoryObj = projectData.categoryId 
+      ? categories.find(cat => cat._id === projectData.categoryId)
+      : null;
+
+    // Optimistic update with category data
     setProjects(prevProjects =>
-      prevProjects.map(project =>
-        project._id === id ? { ...project, ...projectData } : project
-      )
+      prevProjects.map(project => {
+        if (project._id === id) {
+          return { 
+            ...project, 
+            ...projectData,
+            // Keep existing category if not being updated, otherwise use the new one
+            category: categoryObj || project.category
+          };
+        }
+        return project;
+      })
     );
     
     setLoading(true);
@@ -113,16 +137,22 @@ function ProjectContextProvider({ children }) {
       userId: currentUser?._id 
     };
     
-
-    
     const result = await projectService.updateProject(id, projectWithUserId);
     
     setLoading(false);
 
     if (result.data) {
+      // Make sure the updated project has the correct category info
+      const updatedProject = {
+        ...result.data,
+        category: categoryObj || 
+                 projects.find(p => p._id === id)?.category || 
+                 { title: "Loading..." }
+      };
+      
       setProjects(prevProjects => 
         prevProjects.map(project => 
-          project._id === id ? result.data : project
+          project._id === id ? updatedProject : project
         )
       );
     } else {
@@ -131,7 +161,7 @@ function ProjectContextProvider({ children }) {
     }
     
     return result;
-  }, [projects, currentUser]);
+  }, [projects, currentUser, categories]);
 
   // Delete project
   const deleteProject = useCallback(async (id) => {

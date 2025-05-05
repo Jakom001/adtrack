@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '../../context/ProjectContext';
 import { FaSort, FaSortUp, FaSortDown, FaSearch, FaEdit, FaTrash, FaTimes } from 'react-icons/fa';
 import { debounce } from 'lodash';
+import { Edit, Eye, Trash2 } from 'lucide-react';
 
 const ProjectList = () => {
   const {
@@ -12,6 +13,7 @@ const ProjectList = () => {
     deleteProject,
     fetchProjects
   } = useProjectContext();
+
 
   // State for the component
   const [displayedProjects, setDisplayedProjects] = useState([]);
@@ -249,14 +251,15 @@ const ProjectList = () => {
                     </div>
                   </th>
                   <th 
-                    onClick={() => requestSort('createdAt')} 
-                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
+                    onClick={() => requestSort('project')} 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden md:table-cell"
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Created At</span>
-                      <span>{getSortDirectionIcon('createdAt')}</span>
+                      <span>Category</span>
+                      <span>{getSortDirectionIcon('project')}</span>
                     </div>
                   </th>
+                  
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -271,24 +274,30 @@ const ProjectList = () => {
                           ? `${project.description.substring(0, 50)}...`
                           : project.description}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
-                        {new Date(project.createdAt).toLocaleDateString()}
-                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">{project.category.title}</td>
+                      
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                         <div className="flex flex-col sm:flex-row gap-2">
+                        <button 
+                            className="text-primary hover:text-green-700 cursor-pointer"
+
+                          >
+                            <Eye className="w-5 h-5" />
+                          </button>
+                          <button className="text-indigo-600 hover:text-indigo-900 cursor-pointer">
                           <a 
                             href={`/projects/edit/${project._id}`}
-                            className="flex items-center justify-center px-3 py-1 bg-primary text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            className="text-secondary rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                           >
-                            <FaEdit className="mr-1" /> 
-                            <span className="hidden sm:inline">Edit</span>
+                            <Edit className="w-5 h-5" />
                           </a>
+                          </button>
+                          
                           <button 
-                            className="flex items-center justify-center px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            className="text-red-600 hover:text-red-900 cursor-pointer"
                             onClick={() => handleDelete(project._id)}
                           >
-                            <FaTrash className="mr-1" /> 
-                            <span className="hidden sm:inline">Delete</span>
+                            <Trash2 className="w-5 h-5" />
                           </button>
                         </div>
                       </td>

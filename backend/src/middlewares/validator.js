@@ -44,14 +44,13 @@ const projectSchema = Joi.object({
     title: Joi.string().required(),
     description: Joi.string().allow("").optional(),
     userId:Joi.string().required(),
-    projectId:Joi.string().required()
+    categoryId:Joi.string().required()
 })
 
 const taskSchema = Joi.object({
     title: Joi.string().required(),
     description: Joi.string().allow('', null).optional(),
     comment: Joi.string().allow('', null).optional(),
-    categoryId: Joi.string().required(),
     projectId: Joi.string().required(),
     startTime: Joi.date().allow('', null).optional(),
     endTime: Joi.date().allow('', null).optional(),
@@ -70,7 +69,6 @@ const companyValidator = Joi.object({
     city: Joi.string().required(),
     country: Joi.string().required(),
     description: Joi.string().required(),
-
 })
 
 

@@ -2,7 +2,8 @@ import Project from '../models/projectModel.js';
 import { projectSchema } from '../middlewares/validator.js';
 import Auth from '../models/authModel.js'
 import Category from '../models/categoryModel.js';
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
+
 const allProjects = async (req, res) => {
     try {
         const projects = await Project.find().sort({createdAt:-1}).populate(
@@ -79,14 +80,14 @@ const addProject = async (req, res) => {
             return res.status(400).json({ error: 'Invalid user ID format' });
         }
         if (!mongoose.Types.ObjectId.isValid(categoryId)) {
-            return res.status(400).json({ error: 'Invalid project ID format' });
+            return res.status(400).json({ error: 'Invalid category ID format' });
         }
 
         if (await Project.findOne({title })) {
             return res.status(400).json({ error: 'Project title already exists' });
         }
         
-        const checkCategory = await Category.findById(catgoryId);
+        const checkCategory = await Category.findById(categoryId);
 
         if (!checkCategory){
             return res.status(404).json({success:false, error: "invalid category Id"})
@@ -96,7 +97,7 @@ const addProject = async (req, res) => {
         if(!loginUser){
             return res.status(404).json({success:false, error: "Invalid login user"})
         }
-        const newProject = await Project.create({title, description, project:projectId, user:userId});
+        const newProject = await Project.create({title, description, category: categoryId, user:userId});
         res.status(201).json({
             status: 'true', 
             message: 'Project created successfully',
@@ -114,12 +115,17 @@ const addProject = async (req, res) => {
 }
 
 const singleProject = async (req, res) => {
+
     try {
         const id  = req.params.id
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: 'Invalid  ID format' });
         }
-        const project = await Project.findById(id);
+        const project = await Project.findById(id).populate(
+            {
+            path: 'category',
+            select: 'title'
+        });
         
         if (!project) {
             return res.status(404).json({
@@ -144,21 +150,32 @@ const singleProject = async (req, res) => {
 }
 
 const updateProject = async (req, res) => {
-    const { title, description, userId } = req.body;
+    const { title, description, categoryId, userId} = req.body;
     try {
-        const { error } = projectSchema.validate({ title, description, userId});
+        const { error } = projectSchema.validate({ title, description, categoryId, userId});
         if (error) {
             return res.status(400).json({ error: error.details[0].message });
         }
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ error: 'Invalid ID format' });
         }
+
+        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+            return res.status(400).json({ error: 'Invalid category ID format' });
+        }
+
         const loginUser = await Auth.findById(userId)
         if(!loginUser){
             return res.status(404).json({success:false, error: "Invalid login user"})
         }
+        const checkCategory = await Category.findById(categoryId);
+
+        if (!checkCategory){
+            return res.status(404).json({success:false, error: "invalid category Id"})
+        }
+
         const project = await Project.findByIdAndUpdate(req.params
-            .id, {title, description, user: userId}, {
+            .id, {title, description, category:categoryId, user: userId}, {
                 new: true,
                 runValidators: true
             });
@@ -208,4 +225,5 @@ const deleteProject = async (req, res) => {
         });
     }
 }
+
 export { allProjects, addProject, singleProject, updateProject, searchProjects, deleteProject };

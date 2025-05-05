@@ -16,7 +16,7 @@ const projectSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    categoryId:{
+    category:{
         type:mongoose.Schema.Types.ObjectId,
         ref: "Category",
         required: true

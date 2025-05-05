@@ -1,6 +1,5 @@
 import Task from '../models/taskModel.js';
 import Project from '../models/projectModel.js';
-import Category from '../models/categoryModel.js';
 import { taskSchema } from '../middlewares/validator.js';
 import Auth from '../models/authModel.js';
 import mongoose from 'mongoose'
@@ -9,16 +8,12 @@ const allTasks = async (req, res) => {
     try {
         const tasks = await Task.find({ user: req.user.userId })
             .sort({ createdAt: -1 })
-            .populate([
-                {
-                    path: 'category',
-                    select: 'title'
-                },
+            .populate(
                 {
                     path: 'project',
                     select: 'title'
                 }
-            ]);
+            );
         
         res.status(200).json({
             status: 'true',
@@ -48,16 +43,11 @@ const singleTask = async (req, res) => {
                 _id:id,
                 user: req.user.userId })
             .sort({ createdAt: -1 })
-            .populate([
-                {
-                    path: 'category',
-                    select: 'title'
-                },
+            .populate(
                 {
                     path: 'project',
                     select: 'title'
                 }
-            ]
 
         );
         
@@ -125,15 +115,14 @@ const searchTasks = async (req, res) => {
   };
         // Add Task
   const addTask = async (req, res) => {
-    const { title, description, comment, categoryId, projectId, startTime, endTime, breakTime, userId } = req.body;
+    const { title, description, comment, projectId, startTime, endTime, breakTime, userId } = req.body;
     
     try {
         // Create a sanitized object for validation, converting empty strings to null
         const dataToValidate = {
             title, 
             description: description || null,
-            comment: comment || null,
-            categoryId, 
+            comment: comment || null, 
             projectId, 
             startTime: startTime || null, 
             endTime: endTime || null, 
@@ -151,9 +140,7 @@ const searchTasks = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ error: 'Invalid user ID format' });
         }
-        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
-            return res.status(400).json({ error: 'Invalid category ID format' });
-        }
+        
         if (!mongoose.Types.ObjectId.isValid(projectId)) {
             return res.status(400).json({ error: 'Invalid project ID format' });
         }
@@ -164,10 +151,7 @@ const searchTasks = async (req, res) => {
             return res.status(404).json({success: false, error: "Invalid project Id"})
         }
         
-        const checkCategory = await Category.findById(categoryId)
-        if(!checkCategory) {
-            return res.status(404).json({success: false, error: "Invalid category Id"})
-        }
+        
         
         const loginUser = await Auth.findById(userId)
         if(!loginUser) {
@@ -210,7 +194,6 @@ const searchTasks = async (req, res) => {
             title,
             description: description || undefined,
             comment: comment || undefined,
-            category: categoryId,
             project: projectId,
             startTime: startTime || undefined,
             endTime: endTime || undefined,
@@ -238,11 +221,11 @@ const searchTasks = async (req, res) => {
 }
 
 const updateTask = async (req, res) => {
-    const { title, description, comment, status, categoryId, projectId, startTime, endTime, breakTime, userId} = req.body;
+    const { title, description, comment, status, projectId, startTime, endTime, breakTime, userId} = req.body;
     
     try {
         const { error } = taskSchema.validate({ 
-            title, description, categoryId, projectId, startTime, 
+            title, description, projectId, startTime, 
             endTime, breakTime, comment, userId, status, 
         });
         
@@ -252,20 +235,15 @@ const updateTask = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
                     return res.status(400).json({ error: 'Invalid user ID format' });
         }
-        if (!mongoose.Types.ObjectId.isValid(categoryId)) {
-            return res.status(400).json({ error: 'Invalid category ID format' });
-        }
+        
         if (!mongoose.Types.ObjectId.isValid(projectId)) {
-            return res.status(400).json({ error: 'Invalid category ID format' });
+            return res.status(400).json({ error: 'Invalid project ID format' });
         }
         const checkProject = await Project.findById(projectId)
         if(!checkProject){
             return res.status(404).json({success:false, error: "Invalid  project Id"})
         }
-        const checkCategory = await Category.findById(categoryId)
-        if(!checkCategory){
-            return res.status(404).json({success:false, error: "Invalid  category Id"})
-        }
+        
         const loginUser = await Auth.findById(userId)
         if(!loginUser){
             return res.status(404).json({success:false, error: "Invalid login user"})
@@ -303,7 +281,6 @@ const updateTask = async (req, res) => {
                 title,
                 description,
                 comment,
-                categroy: categoryId,
                 project: projectId,
                 startTime,
                 endTime,
