@@ -56,6 +56,17 @@ const Dashboard = () => {
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(task => task.status === 'Completed').length;
   const pendingTasks = tasks.filter(task => task.status === 'Pending').length;
+
+  const workingHours = tasks.reduce((total, task) => {
+    return total + (Number(task.duration) || 0);
+  }, 0);
+
+  const filteredWorkingHours = filteredTasks.reduce((total, task) => {
+    return total + (Number(task.duration) || 0);
+  }, 0);
+  
+  
+
   
   // Prepare data for charts
   const statusData = [

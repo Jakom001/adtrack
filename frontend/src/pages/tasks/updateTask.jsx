@@ -2,21 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useTaskContext } from '../../context/TaskContext';
 import { useProjectContext } from '../../context/ProjectContext';
-import { useCategoryContext } from '../../context/CategoryContext';
 
 const UpdateTask = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { updateTask, getSingleTask, loading, error, clearError } = useTaskContext();
   const { projects } = useProjectContext();
-  const { categories} = useCategoryContext();
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     comment: '',
-    status: '',
-    categoryId: '',
     projectId: '',
     startTime: '',
     endTime: '',
@@ -33,13 +29,12 @@ const UpdateTask = () => {
     const fetchTask = async () => {
       setFetchLoading(true);
       const result = await getSingleTask(id);
+      console.log(result)
       if (result.data) {
         setFormData({
           title: result.data.title || '',
           description: result.data.description || '',
           comment: result.data.comment || '',
-          status: result.data.status || 'Pending',
-          categoryId: result.data.categoryId || '',
           projectId: result.data.projectId || '',
           startTime: result.data.startTime ? new Date(result.data.startTime).toISOString().slice(0, 16) : '',
           endTime: result.data.endTime ? new Date(result.data.endTime).toISOString().slice(0, 16) : '',
@@ -60,14 +55,6 @@ const UpdateTask = () => {
     
     if (!formData.title || !formData.title.trim()) {
       newErrors.title = "Title is required";
-    }
-    
-    if (!formData.status) {
-      newErrors.status = "Status is required";
-    }
-    
-    if (!formData.categoryId) {
-      newErrors.categoryId = "Category is required";
     }
     
     if (!formData.projectId) {
@@ -128,8 +115,7 @@ const UpdateTask = () => {
   }
 
   return (
-    <div className='flex flex-col justify-center items-center min-h-screen text-center bg-gray-50'>
-      <div className="max-w-3xl w-full">
+    <div className='max-w-3xl mx-auto text-center bg-gray-50'>
         <div className="bg-white p-12 rounded-2xl shadow-2xl transition-all duration-300 hover:translate-y-[-3px]">
           <div className="flex flex-col items-center justify-center gap-3 mb-6">
             <h1 className='text-2xl font-bold text-gray-900'>Update Task</h1>
@@ -212,58 +198,6 @@ const UpdateTask = () => {
               )}
             </div>
 
-            {/* Category Selection */}
-            <div className="mb-6 flex flex-col">
-              <label className="text-left text-sm font-medium text-gray-700 mb-2">
-                Category<span className='text-red-500 font-bold'>*</span>
-              </label>
-              <select
-                name="categoryId"
-                value={formData.categoryId}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border ${
-                  formErrors.categoryId ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
-              >
-                <option value="">Select a category</option>
-                {categories && categories.map(category => (
-                  <option key={category._id} value={category._id}>
-                    {category.title}
-                  </option>
-                ))}
-              </select>
-              {formErrors.categoryId && (
-                <div className="text-left text-red-500 text-xs mt-1">
-                  {formErrors.categoryId}
-                </div>
-              )}
-            </div>
-
-            {/* Status Selection */}
-            <div className="mb-6 flex flex-col">
-              <label className="text-left text-sm font-medium text-gray-700 mb-2">
-                Status<span className='text-red-500 font-bold'>*</span>
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border ${
-                  formErrors.status ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
-              >
-                <option value="Pending">Pending</option>
-                <option value="In_progress">In Progress</option>
-                <option value="Completed">Completed</option>
-              </select>
-              {formErrors.status && (
-                <div className="text-left text-red-500 text-xs mt-1">
-                  {formErrors.status}
-                </div>
-              )}
-            </div>
-
-           
 
             {/* Time Fields in a flex row */}
             <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -361,7 +295,6 @@ const UpdateTask = () => {
           </form>
         </div>
       </div>
-    </div>
   );
 };
 

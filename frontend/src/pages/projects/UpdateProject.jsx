@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useProjectContext } from '../../context/ProjectContext';
+import { useCategoryContext } from '../../context/CategoryContext';
 
 const UpdateProject = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { updateProject, getSingleProject, loading, error, clearError } = useProjectContext();
-  
+  const { categories } = useCategoryContext();
+
   const [formData, setFormData] = useState({
     title: '',
-    description: ''
+    description: '',
+    category: '',
   });
+
   const [success, setSuccess] = useState('');
   const [formErrors, setFormErrors] = useState({});
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -24,7 +28,8 @@ const UpdateProject = () => {
       if (result.data) {
         setFormData({
           title: result.data.title || '',
-          description: result.data.description || ''
+          description: result.data.description || '',
+          category:result.data.category.title || '',
         });
       } else {
         // Handle case when project is not found
@@ -40,6 +45,9 @@ const UpdateProject = () => {
     let newErrors = {};
     if (!formData.title || !formData.title.trim()) {
       newErrors.title = "Title is required";
+    }
+    if (!formData.category) {
+      newErrors.category = "Category is required";
     }
     setFormErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -85,8 +93,7 @@ const UpdateProject = () => {
   }
 
   return (
-    <div className='flex flex-col justify-center items-center min-h-screen text-center bg-gray-50'>
-      <div className="max-w-3xl w-full">
+    <div className='mx-auto max-w-xl text-center bg-gray-50'>
         <div className="bg-white p-12 rounded-2xl shadow-2xl transition-all duration-300 hover:translate-y-[-3px]">
           <div className="flex flex-col items-center justify-center gap-3 mb-6">
             <h1 className='text-2xl font-bold text-gray-900'>Update Project</h1>
@@ -122,6 +129,31 @@ const UpdateProject = () => {
               {formErrors.title && (
                 <div className="text-left text-red-500 text-xs mt-1">
                   {formErrors.title}
+                </div>
+              )}
+            </div>
+
+            <div className="mb-8 flex flex-col">
+              <label htmlFor="" className='text-left text-sm font-medium text-gray-700 mb-2 '>
+                Category<span className='text-red-500 font-bold'>*</span>
+              </label>
+              <select 
+              name="categoryId" 
+              value={formData.category}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 border ${
+                formErrors.categoryId ? 'border-red-500' : 'border-gray-300'
+              } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
+              >
+                <option value="">Select Category</option>
+                {categories && categories.map(category => 
+                (
+                  <option value={category._id} key={category._id}>{category.title}</option>
+                ))}
+              </select>
+              {formErrors.categoryId && (
+                <div className="text-left text-red-500 text-xs mt-1">
+                  {formErrors.categoryId}
                 </div>
               )}
             </div>
@@ -167,7 +199,7 @@ const UpdateProject = () => {
             </div>
           </form>
         </div>
-      </div>
+      
     </div>
   );
 };

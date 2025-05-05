@@ -22,11 +22,7 @@ const taskSchema = new mongoose.Schema({
         trim:true,
         lowercase: true,
     },
-    category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category',
-        required: true
-    },
+  
     project:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Project',

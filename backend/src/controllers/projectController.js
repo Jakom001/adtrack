@@ -115,7 +115,6 @@ const addProject = async (req, res) => {
 }
 
 const singleProject = async (req, res) => {
-
     try {
         const id  = req.params.id
         if (!mongoose.Types.ObjectId.isValid(id)) {

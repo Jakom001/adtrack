@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useCategoryContext } from '../../context/CategoryContext';
 import { FaSort, FaSortUp, FaSortDown, FaSearch, FaEdit, FaTrash, FaTimes } from 'react-icons/fa';
+import { Edit, Eye, Trash2 } from 'lucide-react';
 import { debounce } from 'lodash';
 
 const CategoryList = () => {
@@ -276,19 +277,27 @@ const CategoryList = () => {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                         <div className="flex flex-col sm:flex-row gap-2">
-                          <a 
-                            href={`/categories/edit/${category._id}`}
-                            className="flex items-center justify-center px-3 py-1 bg-primary text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                          >
-                            <FaEdit className="mr-1" /> 
-                            <span className="hidden sm:inline">Edit</span>
-                          </a>
+                
                           <button 
-                            className="flex items-center justify-center px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            className="text-primary hover:text-green-700 cursor-pointer"
+
+                          >
+                            <Eye className="w-5 h-5" />
+                          </button>
+                          <button className="text-indigo-600 hover:text-indigo-900 cursor-pointer">
+                          <a 
+                             href={`/categories/edit/${category._id}`}
+                            className="text-secondary rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          >
+                            <Edit className="w-5 h-5" />
+                          </a>
+                          </button>
+                          
+                          <button 
+                            className="text-red-600 hover:text-red-900 cursor-pointer"
                             onClick={() => handleDelete(category._id)}
                           >
-                            <FaTrash className="mr-1" /> 
-                            <span className="hidden sm:inline">Delete</span>
+                            <Trash2 className="w-5 h-5" />
                           </button>
                         </div>
                       </td>

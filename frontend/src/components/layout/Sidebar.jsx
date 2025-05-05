@@ -25,17 +25,19 @@ const Sidebar = () => {
         </NavLink>
         <div className="my-4 border-b border-gray-300 w-full"></div>
 
+        <NavLink to="/categories" className={({isActive}) => 
+          `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''}`
+        }>
+          <ChartBarStacked /> Categories
+        </NavLink>
+
         <NavLink to="/projects" className={({isActive}) => 
           `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''}`
         }>
           <FolderOpenDot /> Projects
         </NavLink>
 
-        <NavLink to="/categories" className={({isActive}) => 
-          `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''}`
-        }>
-          <ChartBarStacked /> Categories
-        </NavLink>
+       
 
         <NavLink to="/tasks" className={({isActive}) => 
           `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''}`

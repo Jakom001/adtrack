@@ -2,20 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTaskContext } from '../../context/TaskContext';
 import { useProjectContext } from '../../context/ProjectContext';
-import { useCategoryContext } from '../../context/CategoryContext';
 
 const AddTask = () => {
   const navigate = useNavigate();
   const { addTask, loading, error, clearError } = useTaskContext();
   const { projects } = useProjectContext();
-  const { categories } = useCategoryContext();
 
   // Initialize form with null values for optional fields instead of empty strings
   const [formData, setFormData] = useState({
     title: '',
     description: null,
     comment: null,
-    categoryId: '',
     projectId: '',
     startTime: null,
     endTime: null,
@@ -32,9 +29,7 @@ const AddTask = () => {
       newErrors.title = "Title is required";
     }
     
-    if (!formData.categoryId) {
-      newErrors.categoryId = "Category is required";
-    }
+    
     
     if (!formData.projectId) {
       newErrors.projectId = "Project is required";
@@ -92,7 +87,6 @@ const AddTask = () => {
         title: '',
         description: null,
         comment: null,
-        categoryId: '',
         projectId: '',
         startTime: null,
         endTime: null,
@@ -107,8 +101,7 @@ const AddTask = () => {
   };
 
   return (
-    <div className='flex flex-col justify-center items-center min-h-screen text-center bg-gray-50'>
-      <div className="max-w-3xl w-full">
+    <div className='max-w-3xl mx-auto text-center bg-gray-50'>
         <div className="bg-white p-12 rounded-2xl shadow-2xl transition-all duration-300 hover:translate-y-[-3px]">
           <div className="flex flex-col items-center justify-center gap-3 mb-6">
             <h1 className='text-2xl font-bold text-gray-900'>Add Task</h1>
@@ -149,20 +142,7 @@ const AddTask = () => {
               )}
             </div>
 
-            {/* Description Field */}
-            <div className="mb-6 flex flex-col">
-              <label className="text-left text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea 
-                name="description"
-                value={formData.description || ''}
-                onChange={handleChange} 
-                rows="3"
-                placeholder="Enter task description"
-                className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
-              />
-            </div>
+            
 
             {/* Project Selection */}
             <div className="mb-6 flex flex-col">
@@ -191,32 +171,7 @@ const AddTask = () => {
               )}
             </div>
 
-            {/* Category Selection */}
-            <div className="mb-6 flex flex-col">
-              <label className="text-left text-sm font-medium text-gray-700 mb-2">
-                Category<span className='text-red-500 font-bold'>*</span>
-              </label>
-              <select
-                name="categoryId"
-                value={formData.categoryId || ''}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 border ${
-                  formErrors.categoryId ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
-              >
-                <option value="">Select a category</option>
-                {categories && categories.map(category => (
-                  <option key={category._id} value={category._id}>
-                    {category.title}
-                  </option>
-                ))}
-              </select>
-              {formErrors.categoryId && (
-                <div className="text-left text-red-500 text-xs mt-1">
-                  {formErrors.categoryId}
-                </div>
-              )}
-            </div>
+           
             {/* Time Fields in a flex row */}
             <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Start Time */}
@@ -269,6 +224,20 @@ const AddTask = () => {
                 className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
               />
             </div>
+            {/* Description Field */}
+            <div className="mb-6 flex flex-col">
+              <label className="text-left text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea 
+                name="description"
+                value={formData.description || ''}
+                onChange={handleChange} 
+                rows="3"
+                placeholder="Enter task description"
+                className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
+              />
+            </div>
 
             {/* Comment Field */}
             <div className="mb-8 flex flex-col">
@@ -312,7 +281,6 @@ const AddTask = () => {
             </div>
           </form>
         </div>
-      </div>
     </div>
   );
 };

@@ -221,12 +221,12 @@ const searchTasks = async (req, res) => {
 }
 
 const updateTask = async (req, res) => {
-    const { title, description, comment, status, projectId, startTime, endTime, breakTime, userId} = req.body;
+    const { title, description, comment,  projectId, startTime, endTime, breakTime, userId} = req.body;
     
     try {
         const { error } = taskSchema.validate({ 
             title, description, projectId, startTime, 
-            endTime, breakTime, comment, userId, status, 
+            endTime, breakTime, comment, userId, 
         });
         
         if (error) {
@@ -266,8 +266,8 @@ const updateTask = async (req, res) => {
             duration = Math.floor(duration / (60 * 1000));
         }
         
-        // Set status to completed if endTime is provided
-        const updatedStatus = endTime ? 'Completed' : (status || 'Pending');
+        const status = endTime ? 'Completed' : 'Pending';
+
         const id  = req.params.id
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: 'Invalid  ID format' });
@@ -287,7 +287,7 @@ const updateTask = async (req, res) => {
                 breakTime,
                 duration,
                 user: userId,
-                status: updatedStatus,
+                status,
             }, 
             {
                 new: true,

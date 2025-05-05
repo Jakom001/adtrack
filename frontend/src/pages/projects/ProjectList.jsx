@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '../../context/ProjectContext';
-import { FaSort, FaSortUp, FaSortDown, FaSearch, FaEdit, FaTrash, FaTimes } from 'react-icons/fa';
+import { FaSort, FaSortUp, FaSortDown, FaSearch, FaTimes } from 'react-icons/fa';
 import { debounce } from 'lodash';
 import { Edit, Eye, Trash2 } from 'lucide-react';
 
