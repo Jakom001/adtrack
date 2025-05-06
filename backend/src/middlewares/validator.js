@@ -78,7 +78,6 @@ export{
     acceptCodeSchema,
     changePasswordSchema,
     acceptFPSchema,
-
     companyValidator,
     categorySchema,
     projectSchema,
