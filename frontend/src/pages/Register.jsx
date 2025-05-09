@@ -116,8 +116,8 @@ const Register = () => {
     const isLoading = loading || authLoading;
 
     return (
-        <div className='flex flex-col items-center justify-center min-h-screen text-center bg-grayColor'>
-            <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-2xl transition-all duration-300 hover:translate-y-1">
+        <div className='max-w-3xl mx-auto text-center bg-grayColor'>
+            <div className="bg-white p-8 rounded-2xl shadow-2xl transition-all duration-300 hover:translate-y-1">
                 <div className="flex flex-col items-center justify-center gap-3 mb-6">
                     <h1 className='text-3xl font-bold text-gray-900'>Adtrack</h1>
                     <div className='bg-primary w-12 h-1 rounded-md'></div>
