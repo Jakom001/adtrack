@@ -158,34 +158,7 @@ const searchTasks = async (req, res) => {
             return res.status(404).json({success: false, error: "Invalid login user"})
         }
         
-        // Time and duration calculations
-        let duration = null;
-        if (startTime && endTime) {
-            const start = new Date(startTime);
-            const end = new Date(endTime);
-            
-            // Make sure dates are valid
-            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-                return res.status(400).json({ error: 'Invalid date format for start or end time' });
-            }
-            
-            // Check if end time is after start time
-            if (end <= start) {
-                return res.status(400).json({ error: 'End time must be after start time' });
-            }
-            
-            // Calculate duration (in hours)
-            const breakTimeMs = (breakTime ? Number(breakTime) : 0) * 60 * 1000;
-            const durationMs = end.getTime() - start.getTime() - breakTimeMs;
-            
-            // Ensure duration is not negative after subtracting break time
-            if (durationMs < 0) {
-                return res.status(400).json({ error: 'Break time cannot exceed the difference between start and end time' });
-            }
-            
-            // Convert to hours (using milliseconds to hours conversion)
-            duration = Math.floor(durationMs / (60 * 60 * 1000));
-        }
+        
         
         const status = endTime ? 'Completed' : 'Pending';
         
@@ -198,7 +171,6 @@ const searchTasks = async (req, res) => {
             startTime: startTime || undefined,
             endTime: endTime || undefined,
             breakTime: breakTime === '' ? 0 : Number(breakTime),
-            duration,
             status,
             user: userId
         });
@@ -249,22 +221,7 @@ const updateTask = async (req, res) => {
             return res.status(404).json({success:false, error: "Invalid login user"})
         }
         
-        // Calculate duration if endTime is provided
-        let duration;
-        if (endTime) {
-            const start = new Date(startTime);
-            const end = new Date(endTime);
-            // Duration in milliseconds minus break time (converted to milliseconds)
-            duration = (end - start) - (breakTime * 60 * 1000);
-            
-            // Ensure duration is not negative
-            if (duration < 0) {
-                return res.status(400).json({ error: 'End time must be after start time, accounting for breaks' });
-            }
-            
-            // Convert to minutes
-            duration = Math.floor(duration / (60 * 1000));
-        }
+       
         
         const status = endTime ? 'Completed' : 'Pending';
 
@@ -285,7 +242,6 @@ const updateTask = async (req, res) => {
                 startTime,
                 endTime,
                 breakTime,
-                duration,
                 user: userId,
                 status,
             }, 
