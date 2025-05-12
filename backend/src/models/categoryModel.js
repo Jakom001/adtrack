@@ -6,6 +6,11 @@ const categorySchema = new mongoose.Schema({
             ref: 'Auth',
             required: true
         },
+    isActive:{
+            type:Boolean,
+            enum: ['active', 'inActive'],
+            default: "active"
+    },
     title: {
         type: String,
         required: [true, "Title is required"],
