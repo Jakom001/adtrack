@@ -12,7 +12,7 @@ const allProjects = async (req, res) => {
             select: 'title'
         });
         res.status(200).json({
-            status: 'true',
+            status: true,
             length: projects.length,
             message: 'Projects fetched successfully',
             data: {
@@ -22,7 +22,7 @@ const allProjects = async (req, res) => {
     } catch (error) {
         console.log("All Projects error", error);
         res.status(404).json({
-            status: 'false',
+            status: false,
             error: "Error getting the projects"
         });
     }
@@ -54,7 +54,7 @@ const searchProjects = async (req, res) => {
       });
       
       res.status(200).json({
-        status: 'true',
+        status: true,
         length: projects.length,
         message: 'Projects search completed',
         data: projects
@@ -133,7 +133,7 @@ const singleProject = async (req, res) => {
             });
         }
         res.status(200).json({
-            status: 'true',
+            status: true,
             message: 'Project fetched successfully',
             data: {
                 project
