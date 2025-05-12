@@ -93,18 +93,18 @@ const Navbar = () => {
                     </div>
                   </div>
 
-                  <Link to="/dashboard" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
+                  <Link to="#" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
                     <SwitchCamera /> Switch Accounts
                   </Link>
-                  <Link to="/dashboard" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
+                  <Link to="#" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
                     <SwitchCamera /> Manage Accounts
                   </Link>
                   <div className="my-4 border-b border-gray-300 w-full"></div>
-                  <Link to="/dashboard" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
+                  <Link to="#" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
                     <SwitchCamera /> Todos
                   </Link>
                   
-                  <Link to="/dashboard" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
+                  <Link to="#" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
                     <SwitchCamera /> Today
                   </Link>
                   <div className="my-4 border-b border-gray-300 w-full"></div>

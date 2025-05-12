@@ -28,6 +28,10 @@ const Dashboard = () => {
     projectId: '',
     startTime: new Date().toISOString(),
   });
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // COLORS for charts
   const COLORS = ['#387269', '#B59A65', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#a4de6c', '#d0ed57'];
@@ -35,6 +39,41 @@ const Dashboard = () => {
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  // Format duration time
+  const formatDuration = (startTime, endTime, breakTime) => {
+    if (!startTime) return '0h 0m';
+    
+    const start = new Date(startTime);
+    const end = endTime ? new Date(endTime) : new Date();
+    let diffInMinutes = (end - start) / (1000 * 60);
+    
+    // Subtract break time if exists
+    if (breakTime) {
+      diffInMinutes -= parseFloat(breakTime);
+    }
+    
+    const hours = Math.floor(diffInMinutes / 60);
+    const minutes = Math.floor(diffInMinutes % 60);
+    
+    return `${hours}h ${minutes}m`;
+  };
+  
+  // Calculate duration in hours
+  const calculateDurationHours = (startTime, endTime, breakTime) => {
+    if (!startTime) return 0;
+    
+    const start = new Date(startTime);
+    const end = endTime ? new Date(endTime) : new Date();
+    let diffInMinutes = (end - start) / (1000 * 60);
+    
+    // Subtract break time if exists
+    if (breakTime) {
+      diffInMinutes -= parseFloat(breakTime);
+    }
+    
+    return parseFloat((diffInMinutes / 60).toFixed(1));
+  };
 
   // Helper function to filter tasks by date range
   const filterTasksByDate = (tasks) => {
@@ -163,12 +202,13 @@ const Dashboard = () => {
 
   // Calculate hours spent
   const totalHoursSpent = filteredTasks.reduce((total, task) => {
-    return total + (Number(task.duration || 0) / 3600); // Convert seconds to hours
+    return total + calculateDurationHours(task.startTime, task.endTime, task.breakTime);
   }, 0).toFixed(1);
 
   // Calculate average time per task (in hours)
   const avgTimePerTask = totalTasks > 0 
-    ? (filteredTasks.reduce((total, task) => total + (Number(task.duration || 0) / 3600), 0) / totalTasks).toFixed(1)
+    ? (filteredTasks.reduce((total, task) => 
+        total + calculateDurationHours(task.startTime, task.endTime, task.breakTime), 0) / totalTasks).toFixed(1)
     : 0;
 
   // Prepare data for charts
@@ -177,18 +217,8 @@ const Dashboard = () => {
     { name: 'Pending', value: pendingTasks },
   ];
 
-  // Category distribution data
+  // Category distribution data - for pie chart
   const categoryData = categories.map(category => {
-    const count = filteredTasks.filter(task => {
-      const project = projects.find(p => 
-        p._id === task.project?._id || (task.project && p._id === task.project._id)
-      );
-      return project && (
-        project.category?._id === category._id || 
-        project.category === category._id
-      );
-    }).length;
-    
     // Calculate hours for this category
     const hours = filteredTasks
       .filter(task => {
@@ -200,38 +230,39 @@ const Dashboard = () => {
           project.category === category._id
         );
       })
-      .reduce((total, task) => total + (Number(task.duration || 0) / 3600), 0).toFixed(1);
+      .reduce((total, task) => 
+        total + calculateDurationHours(task.startTime, task.endTime, task.breakTime), 0);
     
     return {
       name: category.title,
-      count: count,
-      hours: parseFloat(hours)
+      value: parseFloat(hours.toFixed(1))
     };
-  }).sort((a, b) => b.count - a.count);
+  }).filter(item => item.value > 0).sort((a, b) => b.value - a.value);
 
   // Project distribution data
   const projectData = projects.map(project => {
     const count = filteredTasks.filter(task => task.project?._id === project._id).length;
     const hours = filteredTasks
       .filter(task => task.project?._id === project._id)
-      .reduce((total, task) => total + (Number(task.duration || 0) / 3600), 0).toFixed(1);
+      .reduce((total, task) => 
+        total + calculateDurationHours(task.startTime, task.endTime, task.breakTime), 0);
     
     return {
       name: project.title,
       count: count,
-      hours: parseFloat(hours)
+      hours: parseFloat(hours.toFixed(1))
     };
-  }).sort((a, b) => b.count - a.count).slice(0, 5); // Top 5 projects
+  }).filter(item => item.count > 0).sort((a, b) => b.count - a.count).slice(0, 5); // Top 5 projects
 
   // Time spent by day data (for line chart)
   const timeByDayMap = {};
   filteredTasks.forEach(task => {
-    if (task.startTime && task.duration) {
+    if (task.startTime) {
       const date = new Date(task.startTime).toLocaleDateString();
       if (!timeByDayMap[date]) {
         timeByDayMap[date] = 0;
       }
-      timeByDayMap[date] += Number(task.duration || 0) / 3600; // Convert to hours
+      timeByDayMap[date] += calculateDurationHours(task.startTime, task.endTime, task.breakTime);
     }
   });
   
@@ -267,6 +298,87 @@ const Dashboard = () => {
       await deleteTask(taskId);
       fetchTasks();
     }
+  };
+
+  // Pagination functions
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredTasks.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Generate pagination buttons
+  const generatePaginationButtons = () => {
+    const buttons = [];
+    const maxButtons = 5; // Maximum number of page buttons to show
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    
+    // Adjust the start page if we're near the end
+    if (endPage - startPage + 1 < maxButtons && startPage > 1) {
+      startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+    
+    // Add first page button if not included
+    if (startPage > 1) {
+      buttons.push(
+        <button
+          key="first"
+          onClick={() => paginate(1)}
+          className="px-3 py-1 border rounded-md bg-white text-gray-700 hover:bg-gray-50"
+        >
+          1
+        </button>
+      );
+      
+      // Add ellipsis if there's a gap
+      if (startPage > 2) {
+        buttons.push(
+          <span key="ellipsis1" className="px-2 py-1">
+            ...
+          </span>
+        );
+      }
+    }
+    
+    // Add page buttons
+    for (let i = startPage; i <= endPage; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() => paginate(i)}
+          className={`px-3 py-1 border rounded-md ${currentPage === i ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+        >
+          {i}
+        </button>
+      );
+    }
+    
+    // Add last page button if not included
+    if (endPage < totalPages) {
+      // Add ellipsis if there's a gap
+      if (endPage < totalPages - 1) {
+        buttons.push(
+          <span key="ellipsis2" className="px-2 py-1">
+            ...
+          </span>
+        );
+      }
+      
+      buttons.push(
+        <button
+          key="last"
+          onClick={() => paginate(totalPages)}
+          className="px-3 py-1 border rounded-md bg-white text-gray-700 hover:bg-gray-50"
+        >
+          {totalPages}
+        </button>
+      );
+    }
+    
+    return buttons;
   };
 
   if (loading) {
@@ -487,22 +599,27 @@ const Dashboard = () => {
           </div>
           
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Tasks by Category</h2>
+            <h2 className="text-xl font-semibold mb-4">Hours by Category</h2>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={categoryData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
-                  <Tooltip />
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={true}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}h`}
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `${value} hours`} />
                   <Legend />
-                  <Bar yAxisId="left" dataKey="count" fill="#8884d8" name="Tasks" />
-                  <Bar yAxisId="right" dataKey="hours" fill="#82ca9d" name="Hours" />
-                </BarChart>
+                </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
@@ -524,7 +641,7 @@ const Dashboard = () => {
                     tick={{fontSize: 10}}
                   />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip formatter={(value) => `${value} hours`} />
                   <Legend />
                   <Line type="monotone" dataKey="hours" stroke="#8884d8" name="Hours" />
                 </LineChart>
@@ -668,7 +785,7 @@ const Dashboard = () => {
                           </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {task.duration ? (task.duration / 3600).toFixed(1) : '-'}
+                          {formatDuration(task.startTime, task.endTime, task.breakTime)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {task.startTime ? new Date(task.startTime).toLocaleDateString() : '-'}

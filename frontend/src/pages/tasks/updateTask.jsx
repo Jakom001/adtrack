@@ -29,13 +29,20 @@ const UpdateTask = () => {
     const fetchTask = async () => {
       setFetchLoading(true);
       const result = await getSingleTask(id);
-      console.log(result)
+      console.log("Task data:", result.data);
+      
       if (result.data) {
+        // The critical fix: Correctly extract the project ID from the task data
+        // It could be either directly as projectId or as a nested project object
+        const projectId = result.data.projectId || 
+                         (result.data.project && result.data.project._id) || 
+                         '';
+        
         setFormData({
           title: result.data.title || '',
           description: result.data.description || '',
           comment: result.data.comment || '',
-          projectId: result.data.projectId || '',
+          projectId: projectId, // Use the extracted project ID
           startTime: result.data.startTime ? new Date(result.data.startTime).toISOString().slice(0, 16) : '',
           endTime: result.data.endTime ? new Date(result.data.endTime).toISOString().slice(0, 16) : '',
           breakTime: result.data.breakTime || ''

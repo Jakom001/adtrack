@@ -12,7 +12,7 @@ const UpdateProject = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: '',
+    categoryId: '', 
   });
 
   const [success, setSuccess] = useState('');
@@ -24,12 +24,11 @@ const UpdateProject = () => {
     const fetchProject = async () => {
       setFetchLoading(true);
       const result = await getSingleProject(id);
-      
       if (result.data) {
         setFormData({
           title: result.data.title || '',
           description: result.data.description || '',
-          category:result.data.category.title || '',
+          categoryId: result.data.category?._id || '', 
         });
       } else {
         // Handle case when project is not found
@@ -46,8 +45,8 @@ const UpdateProject = () => {
     if (!formData.title || !formData.title.trim()) {
       newErrors.title = "Title is required";
     }
-    if (!formData.category) {
-      newErrors.category = "Category is required";
+    if (!formData.categoryId) {
+      newErrors.categoryId = "Category is required";
     }
     setFormErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -138,16 +137,15 @@ const UpdateProject = () => {
                 Category<span className='text-red-500 font-bold'>*</span>
               </label>
               <select 
-              name="categoryId" 
-              value={formData.category}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border ${
-                formErrors.categoryId ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
+                name="categoryId" // Changed from 'category' to 'categoryId'
+                value={formData.categoryId} // Changed from 'category' to 'categoryId'
+                onChange={handleChange}
+                className={`w-full px-3 py-2 border ${
+                  formErrors.categoryId ? 'border-red-500' : 'border-gray-300'
+                } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
               >
                 <option value="">Select Category</option>
-                {categories && categories.map(category => 
-                (
+                {categories && categories.map(category => (
                   <option value={category._id} key={category._id}>{category.title}</option>
                 ))}
               </select>
@@ -199,7 +197,6 @@ const UpdateProject = () => {
             </div>
           </form>
         </div>
-      
     </div>
   );
 };

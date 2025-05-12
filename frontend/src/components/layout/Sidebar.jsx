@@ -25,10 +25,10 @@ const Sidebar = () => {
         </NavLink>
         <div className="my-4 border-b border-gray-300 w-full"></div>
 
-        <NavLink to="/categories" className={({isActive}) => 
+        <NavLink to="/tasks" className={({isActive}) => 
           `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''}`
         }>
-          <ChartBarStacked /> Categories
+          <CalendarClock /> Today
         </NavLink>
 
         <NavLink to="/projects" className={({isActive}) => 
@@ -37,13 +37,17 @@ const Sidebar = () => {
           <FolderOpenDot /> Projects
         </NavLink>
 
-       
-
-        <NavLink to="/tasks" className={({isActive}) => 
+        <NavLink to="/categories" className={({isActive}) => 
           `my-2 flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor ${isActive ? 'bg-primary hover:bg-secondary text-white' : ''}`
         }>
-          <CalendarClock /> Today
+          <ChartBarStacked /> Categories
         </NavLink>
+
+        
+
+       
+
+        
       </div>
       
       <div className="px-6 mb-6 mt-auto">
