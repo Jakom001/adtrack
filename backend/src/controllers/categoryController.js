@@ -4,10 +4,7 @@ import Auth from '../models/authModel.js'
 import mongoose from 'mongoose'
 const allCategories = async (req, res) => {
     try {
-        const categories = await Category.find().sort({createdAt:-1}).populate({
-            path: 'user',
-            select: 'firstName'
-        });
+        const categories = await Category.find().sort({createdAt:-1})
         res.status(200).json({
             status: 'true',
             length: categories.length,

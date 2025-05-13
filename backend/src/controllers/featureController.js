@@ -5,11 +5,13 @@ import { featureSchema } from "../middlewares/validator.js";
 
 const allFeatures = async (req, res) =>{
     try{
-        const features = await Feature.find().sort({createdAt:-1})
-
+        const features = await Feature.find({ user: req.user.userId }).sort({createdAt:-1}).populate({
+            path: 'user',
+            select: 'firstName'
+        });
         res.status(200).json({
             length: features.length,
-            success: true,
+            status: 'true',
             message: "Features fetched successfully",
             data: {
                 features
@@ -20,7 +22,7 @@ const allFeatures = async (req, res) =>{
         console.log("Features errors", error)
         res.status(404).json({
             error: "Error occurred while fetching users",
-            success: false
+            status: 'false'
         })
     }
 }
@@ -33,11 +35,14 @@ const singleFeature = async (req, res) =>{
                     return res.status(400).json({ error: 'Invalid  ID format' });
         }
 
-        const feature = await Feature.findById(id)
+        const feature = await Feature.findById({
+            _id:id,
+            user: req.user.userId
+        })
 
         if (!feature){
             return res.status(404).json({
-                success: false,
+                status: 'false',
                 error: "Feature not found"
             })
         }
@@ -51,7 +56,7 @@ const singleFeature = async (req, res) =>{
     }catch (error){
         console.log("Single Feature Error", error)
         res.status(404).json({
-            success:false,
+            status:'false',
             error: "Error fetching the feature"
         })
     }
@@ -63,7 +68,7 @@ const searchFeatures = async (req, res) =>{
 
         if (!searchTerm){
             return res.status(400).json({
-                success:false,
+                status:'false',
                 error: "Search query is required"
             })
         }
@@ -71,6 +76,7 @@ const searchFeatures = async (req, res) =>{
         const searchRegex = new RegExp(searchTerm, 'i');
 
         const features = await Feature.find({
+            user: req.user.userId,
             $or: [
                 {name: searchRegex},
                 {description: searchRegex}
@@ -78,7 +84,7 @@ const searchFeatures = async (req, res) =>{
         }).sort({ createdAt: -1 })
 
         res.status(200).json({
-            success: true,
+            status: 'true',
             length: features.length,
             message: "Features Search Completed",
             data: {
@@ -102,7 +108,7 @@ const addFeature = async (req, res) =>{
         
         if (error){
             return res.status(400).json({
-                success:false,
+                status:'false',
                 error: error.details[0].message
             })
         }
@@ -113,7 +119,7 @@ const addFeature = async (req, res) =>{
         }
         const loginUser = await Auth.findById(userId)
         if(!loginUser) {
-            return res.status(404).json({success: false, error: "Invalid login user"})
+            return res.status(404).json({status: 'false', error: "Invalid login user"})
         }
 
         const newFeature = await Feature.create({name, type, status, priority, image, description, user:userId})
@@ -137,11 +143,11 @@ const updateFeature = async (req, res) =>{
     try{
         const {name, type, priority, status, image, description, userId} = req.body
 
-        const {error} = featureSchema.validate({name, type, priority, image, description, userId})
+        const {error} = featureSchema.validate({name, type, status, priority, image, description, userId})
         
         if (error){
             return res.status(400).json({
-                success:false,
+                status:'false',
                 error: error.details[0].message
             })
         }
@@ -152,10 +158,15 @@ const updateFeature = async (req, res) =>{
         }
         const loginUser = await Auth.findById(userId)
         if(!loginUser) {
-            return res.status(404).json({success: false, error: "Invalid login user"})
+            return res.status(404).json({status: 'false', error: "Invalid login user"})
         }
 
-        const feature = await Feature.findByIdAndUpdate(request.params.id,
+        
+        const feature = await Feature.findOneAndUpdate(
+            { 
+                _id:req.params.id,
+                user: req.user.userId
+            }, 
             {name, type, priority, image, status, description, user:userId},
             {
                 new:true,
@@ -165,7 +176,7 @@ const updateFeature = async (req, res) =>{
 
         if(!feature){
             return res.status(404).json({
-                success:false,
+                status:'false',
                 error: "Feature not found"
             })
         }
@@ -187,11 +198,14 @@ const updateFeature = async (req, res) =>{
 
 const deleteFeature = async (req, res) => {
     try {
-        const result = await Feature.findByIdAndDelete(req.params.id);
+        const result = await Feature.findOneAndDelete({ 
+            _id: req.params.id,
+            user: req.user.userId
+        });
 
         if (!result) {
             return res.status(404).json({
-                success: false,
+                status: 'false',
                 error: "Feature not found"
             });
         }
