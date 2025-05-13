@@ -1,25 +1,21 @@
 import mongoose from "mongoose";
 
-const featureSchema = new mongoose.Schema({
+const ticketSchema = new mongoose.Schema({
     name :{
         type: String,
         trim: true,
         lowercase:true,
         required : [true,'name is Required']
     },
-    type: {
-        type: String,
-        enum:['feature','bugFix', 'improvement', 'other' ],
-        default: 'feature'
+    ticket:{
+        type:Number,
+        required: [true, 'ticket is required']
     },
+    
     priority:{
         type: String,
         enum:['High', 'Medium', 'Low'],
         default: 'Medium',
-    },
-    image:{
-        type: String,
-        trim: true
     },
     description:{
         type: String,
@@ -27,8 +23,13 @@ const featureSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Completed'],
-        default: 'Pending'
+        enum: ['Open', 'Close'],
+        default: 'Open'
+    },
+    assigned:{
+        type: mongoose.Schema.Types.ObjectId,
+            ref: 'Auth',
+            required: true
     },
     user: {
             type: mongoose.Schema.Types.ObjectId,
@@ -40,6 +41,6 @@ const featureSchema = new mongoose.Schema({
 }
 )
 
-const Feature = mongoose.model('Feature', featureSchema)
+const Ticket = mongoose.model('Ticket', ticketSchema)
 
-export default Feature
+export default Ticket

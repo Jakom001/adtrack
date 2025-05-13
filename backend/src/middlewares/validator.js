@@ -1,4 +1,4 @@
-import Joi, { string } from 'joi';
+import Joi from 'joi';
 
 const registerSchema = Joi.object({
     firstName: Joi.string().required().min(3),
@@ -61,11 +61,23 @@ const taskSchema = Joi.object({
 const featureSchema = Joi.object({
     name: Joi.string().required(),
     type: Joi.string().valid('feature','bugFix', 'improvement', 'other'),
-    priority:string().valid('High', 'Medium', 'Low'),
-    image:string().allow('').optional(),
-    description:string().allow('').optional(),
+    priority:Joi.string().valid('High', 'Medium', 'Low'),
+    status:Joi.string().valid('Pending', 'Completed'),
+    image:Joi.string().allow('').optional(),
+    description:Joi.string().allow('').optional(),
     userId: Joi.string().required(),
 })
+
+const ticketSchema = Joi.object({
+    name: Joi.string().required(),
+    priority:Joi.string().valid('High', 'Medium', 'Low'),
+    status:Joi.string().valid("Open", "Close"),
+    image:Joi.string().allow('').optional(),
+    description:Joi.string().allow('').optional(),
+    userId: Joi.string().required(),
+    assigned: Joi.string().required(),
+})
+
 const companyValidator = Joi.object({
     companyName: Joi.string().required(),
     industry: Joi.string().required(),
@@ -91,5 +103,6 @@ export{
     projectSchema,
     taskSchema,
     featureSchema,
+    ticketSchema
 };
 

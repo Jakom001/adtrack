@@ -1,23 +1,23 @@
-import Feature from "../models/featureModel.js";
+import Ticket from "../models/ticketModel.js";
 import Auth from "../models/authModel.js";
 import mongoose from "mongoose";
-import { featureSchema } from "../middlewares/validator.js";
 
-const allFeatures = async (req, res) =>{
+import { ticketSchema } from "../middlewares/validator.js";
+const allTickets = async (req, res) =>{
     try{
-        const features = await Feature.find().sort({createdAt:-1})
+        const tickets = await Ticket.find().sort({createdAt:-1})
 
         res.status(200).json({
-            length: features.length,
+            length: tickets.length,
             success: true,
-            message: "Features fetched successfully",
+            message: "Tickets fetched successfully",
             data: {
-                features
+                tickets
             }
 
         })
     }catch (error) {
-        console.log("Features errors", error)
+        console.log("Tickets errors", error)
         res.status(404).json({
             error: "Error occurred while fetching users",
             success: false
@@ -25,7 +25,7 @@ const allFeatures = async (req, res) =>{
     }
 }
 
-const singleFeature = async (req, res) =>{
+const singleTicket = async (req, res) =>{
     try{
         const id = req.params.id
 
@@ -33,31 +33,31 @@ const singleFeature = async (req, res) =>{
                     return res.status(400).json({ error: 'Invalid  ID format' });
         }
 
-        const feature = await Feature.findById(id)
+        const ticket = await Ticket.findById(id)
 
-        if (!feature){
+        if (!ticket){
             return res.status(404).json({
                 success: false,
-                error: "Feature not found"
+                error: "Ticket not found"
             })
         }
         res.status(200).json({
             status:true,
-            message: "Feature fetched successfully",
+            message: "Ticket fetched successfully",
             data: {
-                feature
+                ticket
             }
         });
     }catch (error){
-        console.log("Single Feature Error", error)
+        console.log("Single Ticket Error", error)
         res.status(404).json({
             success:false,
-            error: "Error fetching the feature"
+            error: "Error fetching the ticket"
         })
     }
 }
 
-const searchFeatures = async (req, res) =>{
+const searchTickets = async (req, res) =>{
     try {
         const searchTerm = req.query.q
 
@@ -70,7 +70,7 @@ const searchFeatures = async (req, res) =>{
 
         const searchRegex = new RegExp(searchTerm, 'i');
 
-        const features = await Feature.find({
+        const tickets = await Ticket.find({
             $or: [
                 {name: searchRegex},
                 {description: searchRegex}
@@ -79,26 +79,26 @@ const searchFeatures = async (req, res) =>{
 
         res.status(200).json({
             success: true,
-            length: features.length,
-            message: "Features Search Completed",
+            length: tickets.length,
+            message: "Tickets Search Completed",
             data: {
-                features
+                tickets
             }
         })
     }catch (error){
-        console.log("Search Featured error", error);
+        console.log("Search Ticket error", error);
       res.status(500).json({
         status: 'false',
-        error: "Error searching for features"
+        error: "Error searching for tickets"
       });
     }
 }
 
-const addFeature = async (req, res) =>{
+const addTicket = async (req, res) =>{
     try{
-        const {name, type, priority, image, description, userId, status} = req.body
+        const {name, type, priority, ticket, assigned, description, userId, status} = req.body
 
-        const {error} = featureSchema.validate({name, type, status, priority, image, description, userId})
+        const {error} = ticketSchema.validate({name, type, status, priority, ticket, assigned, description, userId})
         
         if (error){
             return res.status(400).json({
@@ -116,28 +116,28 @@ const addFeature = async (req, res) =>{
             return res.status(404).json({success: false, error: "Invalid login user"})
         }
 
-        const newFeature = await Feature.create({name, type, status, priority, image, description, user:userId})
+        const newTicket = await Ticket.create({name, type, status, priority, ticket, assigned, description, user:userId})
         res.status(201).json({
             status: 'true', 
-            message: 'Feature created successfully',
+            message: 'Ticket created successfully',
             data: {
-                feature: newFeature
+                ticket: newTicket
             }
         });
     }catch (error) {
-        console.log("Create Feature error", error);
+        console.log("Create Ticket error", error);
         res.status(400).json({
             status: 'false',
-            error: "Error creating the Feature"
+            error: "Error creating the Ticket"
         });
     }
 }
 
-const updateFeature = async (req, res) =>{
+const updateTicket = async (req, res) =>{
     try{
-        const {name, type, priority, status, image, description, userId} = req.body
+        const {name, type, priority, status, ticket, assigned, description, userId} = req.body
 
-        const {error} = featureSchema.validate({name, type, priority, image, description, userId})
+        const {error} = ticketSchema.validate({name, type, priority, ticket, assigned, description, userId})
         
         if (error){
             return res.status(400).json({
@@ -155,57 +155,57 @@ const updateFeature = async (req, res) =>{
             return res.status(404).json({success: false, error: "Invalid login user"})
         }
 
-        const feature = await Feature.findByIdAndUpdate(request.params.id,
-            {name, type, priority, image, status, description, user:userId},
+        const updateTicket = await Ticket.findByIdAndUpdate(request.params.id,
+            {name, type, priority, ticket, assigned, status, description, user:userId},
             {
                 new:true,
                 runValidators:true
             }
         );
 
-        if(!feature){
+        if(!updateTicket){
             return res.status(404).json({
                 success:false,
-                error: "Feature not found"
+                error: "Ticket not found"
             })
         }
         res.status(200).json({
             status: 'true', 
-            message: 'Feature updated successfully',
+            message: 'Ticket updated successfully',
             data: {
-                feature
+                ticket:updateTicket
             }
         });
     }catch (error) {
-        console.log("Update Feature error", error);
+        console.log("Update Ticket error", error);
         res.status(400).json({
             status: 'false',
-            error: "Error updating the Feature"
+            error: "Error updating the Ticket"
         });
     }
 }
 
-const deleteFeature = async (req, res) => {
+const deleteTicket = async (req, res) => {
     try {
-        const result = await Feature.findByIdAndDelete(req.params.id);
+        const result = await Ticket.findByIdAndDelete(req.params.id);
 
         if (!result) {
             return res.status(404).json({
                 success: false,
-                error: "Feature not found"
+                error: "Ticket not found"
             });
         }
         res.status(204).json({
-            status: 'true', message: "Feature deleted successfully",
+            status: 'true', message: "Ticket deleted successfully",
             data: null
         });
     } catch (error) {
-        console.log("Delete Feature erro", error);
+        console.log("Delete Ticket erro", error);
         res.status(404).json({
             status: 'false',
-            error: "Error deleting the Feature"
+            error: "Error deleting the Ticket"
         });
     }
 }
 
-export { allFeatures, addFeature, singleFeature, updateFeature, searchFeatures, deleteFeature };
+export { allTickets, addTicket, singleTicket, updateTicket, searchTickets, deleteTicket };

@@ -6,6 +6,8 @@ import cookieParser from 'cookie-parser';
 import authroutes from './routes/authRoute.js';
 import category from './routes/categoryRoutes.js';
 import project from './routes/projectsRoutes.js';
+import ticket from './routes/ticketRoutes.js';
+import feature from './routes/featureRoutes.js';
 import task from './routes/taskRoutes.js';
 import { isAuthenticated } from './middlewares/authenticateUser.js';
 import rateLimit from 'express-rate-limit';
@@ -56,6 +58,8 @@ app.use('/api/auth', authroutes);
 app.use('/api/category', isAuthenticated, category)
 app.use('/api/project', isAuthenticated, project)
 app.use('/api/task', isAuthenticated, task)
+app.use('/api/feature', isAuthenticated, feature)
+app.use('/api/ticket', isAuthenticated, ticket)
 
 // Home Route
 app.get('/', (req, res) => {
