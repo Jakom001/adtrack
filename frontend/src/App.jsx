@@ -28,6 +28,10 @@ import UpdateTask from './pages/tasks/updateTask';
 import { CategoryContextProvider } from './context/CategoryContext';
 import { TaskContextProvider } from './context/TaskContext';
 import { ProjectContextProvider } from './context/ProjectContext';
+import AddFeature from './pages/features/AddFeature';
+import { FeatureContextProvider } from './context/FeatureContext';
+import FeatureList from './pages/features/FeatureList';
+import UpdateFeature from './pages/features/updateFeature';
 
 AOS.init({ once: false });
 
@@ -84,6 +88,13 @@ function App() {
                     <Route path='add' element={<AddTask />} />
                     <Route path="edit/:id" element={<UpdateTask />} />
                   </Route>
+
+                  {/* Feature Routes */}
+                  <Route path='/features'>
+                    <Route index element={<FeatureList />} />
+                    <Route path='add' element={<AddFeature />} />
+                    <Route path="edit/:id" element={<UpdateFeature />} />
+                  </Route>
                 </Route>
               </Route>
               
@@ -108,7 +119,9 @@ const MultiContextProvider = ({ children }) => {
     <CategoryContextProvider>
       <ProjectContextProvider>
         <TaskContextProvider>
+          <FeatureContextProvider>
           {children}
+          </FeatureContextProvider>
         </TaskContextProvider>
       </ProjectContextProvider>      
     </CategoryContextProvider>

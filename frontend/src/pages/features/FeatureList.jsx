@@ -1,45 +1,43 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useTaskContext } from '../../context/TaskContext';
+import { useFeatureContext } from '../../context/FeatureContext';
 import { FaSort, FaSortUp, FaSortDown, FaSearch, FaEdit, FaTrash, FaTimes, FaPlay, FaPause, FaExclamationTriangle } from 'react-icons/fa';
 import { Edit, Eye, Trash2 } from 'lucide-react';
 import { debounce } from 'lodash';
 
-const TaskList = () => {
+const FeatureList = () => {
   const {
-    tasks,
+    features,
     loading,
     error,
-    searchTasks,
-    deleteTask,
-    fetchTasks,
-    updateTaskStatus
-  } = useTaskContext();
-console.log(tasks)
+    searchFeatures,
+    deleteFeature,
+    fetchFeatures,
+    updateFeatureStatus
+  } = useFeatureContext();
+console.log(features)
   // State for the component
-  const [displayedTasks, setDisplayedTasks] = useState([]);
+  const [displayedFeatures, setDisplayedFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'title', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, taskId: null, taskTitle: '' });
-  const [totalDailyHours, setTotalDailyHours] = useState({ hours: 0, minutes: 0 });
 
   // Debounced search function
   const debouncedSearch = useCallback(
     debounce(async (term) => {
       if (term.trim()) {
         setIsSearching(true);
-        const result = await searchTasks(term);
+        const result = await searchFeatures(term);
         if (result.data) {
-          setDisplayedTasks(result.data);
+          setDisplayedFeatures(result.data);
         }
       } else {
         clearSearch();
       }
     }, 300),
-    [searchTasks]
+    [searchFeatures]
   );
 
   // Handle search input change
@@ -54,7 +52,7 @@ console.log(tasks)
   const clearSearch = async () => {
     setSearchTerm('');
     setIsSearching(false);
-    await fetchTasks();
+    await fetchFeatures();
     setCurrentPage(1);
   };
 
@@ -75,24 +73,18 @@ console.log(tasks)
     return sortConfig.direction === 'asc' ? <FaSortUp /> : <FaSortDown />;
   };
 
-  // Handle delete task
+   // Handle delete feature
   const handleDelete = async (id) => {
-    await deleteTask(id);
-    setDeleteModal({ isOpen: false, taskId: null, taskTitle: '' });
+    if (window.confirm('Are you sure you want to delete this feature?')) {
+      await deleteFeature(id);
+    }
   };
 
-  // Open delete confirmation modal
-  const openDeleteModal = (task) => {
-    setDeleteModal({ 
-      isOpen: true, 
-      taskId: task._id, 
-      taskTitle: task.title 
-    });
-  };
+ 
 
   // Handle status change
   const handleStatusChange = async (id, newStatus) => {
-    await updateTaskStatus(id, newStatus);
+    await updateFeatureStatus(id, newStatus);
   };
   
   // Handle tab change
@@ -103,52 +95,6 @@ console.log(tasks)
 
   // Handle page change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  // Format duration time
-  const formatDuration = (startTime, endTime, breakTime) => {
-    if (!startTime) return '0h 0m';
-    
-    const start = new Date(startTime);
-    const end = endTime ? new Date(endTime) : new Date();
-    let diffInMinutes = (end - start) / (1000 * 60);
-    
-    // Subtract break time if exists
-    if (breakTime) {
-      diffInMinutes -= parseFloat(breakTime);
-    }
-    
-    const hours = Math.floor(diffInMinutes / 60);
-    const minutes = Math.floor(diffInMinutes % 60);
-    
-    return `${hours}h ${minutes}m`;
-  };
-
-   // Calculate total duration from all tasks
-  const calculateTotalDailyDuration = (taskList) => {
-    if (!taskList || taskList.length === 0) return { hours: 0, minutes: 0 };
-
-    let totalMinutes = 0;
-
-    taskList.forEach(task => {
-      if (task.startTime) {
-        const start = new Date(task.startTime);
-        const end = task.endTime ? new Date(task.endTime) : new Date();
-        let diffInMinutes = (end - start) / (1000 * 60);
-        
-        // Subtract break time if exists
-        if (task.breakTime) {
-          diffInMinutes -= parseFloat(task.breakTime);
-        }
-        
-        totalMinutes += diffInMinutes;
-      }
-    });
-    
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = Math.floor(totalMinutes % 60);
-    
-    return { hours, minutes };
-  };
 
   // Get status badge color
   const getStatusBadgeColor = (status) => {
@@ -161,21 +107,35 @@ console.log(tasks)
         return 'bg-gray-100 text-gray-800';
     }
   };
+  
+  // Get Priority badge color
+  const getPriorityBadgeColor = (priority) => {
+    switch (priority) {
+      case 'Low':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Medium':
+        return 'bg-blue-100 text-blue-800';
+      case 'High':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
-  // Update displayed tasks when tasks change or when sorting/filtering/pagination changes
+  // Update displayed features when features change or when sorting/filtering/pagination changes
   useEffect(() => {
-    if (!tasks.length) return;
+    if (!features.length) return;
     
-    let filteredTasks = [...tasks];
+    let filteredFeatures = [...features];
     
     // Apply status filter based on active tab
     if (activeTab !== 'all') {
-      filteredTasks = filteredTasks.filter(task => task.status === activeTab);
+      filteredFeatures = filteredFeatures.filter(feature => feature.status === activeTab);
     }
     
     // Apply sorting
     if (sortConfig.key) {
-      filteredTasks.sort((a, b) => {
+      filteredFeatures.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
           return sortConfig.direction === 'asc' ? -1 : 1;
         }
@@ -186,17 +146,14 @@ console.log(tasks)
       });
     }
     
-    setDisplayedTasks(filteredTasks);
-    // Calculate total daily hours
-    const totalTime = calculateTotalDailyDuration(tasks);
-    setTotalDailyHours(totalTime);
-  }, [tasks, sortConfig, activeTab]);
+    setDisplayedFeatures(filteredFeatures);
+  }, [features, sortConfig, activeTab]);
 
   // Calculate pagination indexes
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = displayedTasks.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(displayedTasks.length / itemsPerPage);
+  const currentItems = displayedFeatures.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(displayedFeatures.length / itemsPerPage);
 
   // Generate pagination buttons
   const generatePaginationButtons = () => {
@@ -271,32 +228,27 @@ console.log(tasks)
     return buttons;
   };
 
-  // Count tasks by status
-  const getTaskCountByStatus = (status) => {
-    if (!tasks.length) return 0;
-    if (status === 'all') return tasks.length;
-    return tasks.filter(task => task.status === status).length;
+  // Count features by status
+  const getFeatureCountByStatus = (status) => {
+    if (!features.length) return 0;
+    if (status === 'all') return features.length;
+    return features.filter(feature => feature.status === status).length;
   };
 
   return (
     <div className="p-5 bg-white rounded-lg shadow">
-      <h2 className="text-xl font-semibold text-gray-800 mb-5">Tasks</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-3">Features</h2>
+      <p className='mb-5 text-gray-500 text-sm'>Request features to be added to the system and report bugs/issues in the system</p>
       
-      
-      {/* Search and Add New Task button */}
+      {/* Search and Add New Feature button */}
       <div className="flex flex-col sm:flex-row items-center justify-between mb-5 gap-4">
         <a 
-          href="/tasks/add" 
+          href="/features/add" 
           className="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
         >
-          Add New Task
+          Add New Feature
         </a>
-        <div>
-            <p className="text-sm text-gray-600">Total hours worked today:</p>
-            <p className="text-2xl font-bold text-primary">
-              {totalDailyHours.hours}h {totalDailyHours.minutes}m
-            </p>
-          </div>
+        
         <div className="relative w-full sm:w-auto max-w-md">
           <div className="flex items-center">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -304,7 +256,7 @@ console.log(tasks)
             </div>
             <input
               type="text"
-              placeholder="Search tasks..."
+              placeholder="Search features..."
               value={searchTerm}
               onChange={handleSearchChange}
               className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -334,7 +286,7 @@ console.log(tasks)
           >
             All 
             <span className="ml-2 bg-gray-100 text-gray-700 py-0.5 px-2 rounded-full text-xs">
-              {getTaskCountByStatus('all')}
+              {getFeatureCountByStatus('all')}
             </span>
           </button>
           <button
@@ -347,7 +299,7 @@ console.log(tasks)
           >
             Pending
             <span className="ml-2 bg-yellow-100 text-yellow-800 py-0.5 px-2 rounded-full text-xs">
-              {getTaskCountByStatus('Pending')}
+              {getFeatureCountByStatus('Pending')}
             </span>
           </button>
          
@@ -361,7 +313,7 @@ console.log(tasks)
           >
             Completed
             <span className="ml-2 bg-green-100 text-green-800 py-0.5 px-2 rounded-full text-xs">
-              {getTaskCountByStatus('Completed')}
+              {getFeatureCountByStatus('Completed')}
             </span>
           </button>
         </nav>
@@ -375,19 +327,19 @@ console.log(tasks)
         <div className="py-4 px-6 bg-red-50 text-red-600 rounded-md">Error: {error}</div>
       ) : (
         <>
-          {/* Tasks table */}
+          {/* Features table */}
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                   <th 
-                    onClick={() => requestSort('title')} 
+                    onClick={() => requestSort('name')} 
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Title</span>
-                      <span>{getSortDirectionIcon('title')}</span>
+                      <span>Name</span>
+                      <span>{getSortDirectionIcon('name')}</span>
                     </div>
                   </th>
                   <th 
@@ -400,83 +352,75 @@ console.log(tasks)
                     </div>
                   </th>
                   <th 
-                    onClick={() => requestSort('duration')} 
+                    onClick={() => requestSort('priority')} 
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Duration</span>
-                      <span>{getSortDirectionIcon('duration')}</span>
+                      <span>Priority</span>
+                      <span>{getSortDirectionIcon('priority')}</span>
                     </div>
                   </th>
-                  <th 
-                    onClick={() => requestSort('project')} 
+                   <th 
+                    onClick={() => requestSort('addedBy')} 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden md:table-cell"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Added By</span>
+                      <span>{getSortDirectionIcon('addedBy')}</span>
+                    </div>
+                  </th>
+                   <th 
+                    onClick={() => requestSort('createdAt')} 
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Project</span>
-                      <span>{getSortDirectionIcon('project')}</span>
+                      <span>Created At</span>
+                      <span>{getSortDirectionIcon('createdAt')}</span>
                     </div>
                   </th>
-                  <th 
-                    onClick={() => requestSort('startTime')} 
-                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>Start Time</span>
-                      <span>{getSortDirectionIcon('startTime')}</span>
-                    </div>
-                  </th>
-                  <th 
-                    onClick={() => requestSort('endTime')} 
-                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 hidden sm:table-cell"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <span>End Time</span>
-                      <span>{getSortDirectionIcon('endTime')}</span>
-                    </div>
-                  </th>
+                  
+                  
+                  
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {currentItems.length > 0 ? (
-                  currentItems.map((task, index) => (
-                    <tr key={task._id} className="hover:bg-gray-50">
+                  currentItems.map((feature, index) => (
+                    <tr key={feature._id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{indexOfFirstItem + index + 1}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">
                         <div>
-                          <p className="font-medium">{task.title}</p>
-                          {task.description && (
+                          <p className="font-medium">{feature.name}</p>
+                          {feature.description && (
                             <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                              {task.description.length > 50 
-                                ? `${task.description.substring(0, 50)}...`
-                                : task.description}
+                              {feature.description.length > 50 
+                                ? `${feature.description.substring(0, 50)}...`
+                                : feature.description}
                             </p>
                           )}
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeColor(task.status)}`}>
-                          {task.status}
+                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeColor(feature.status)}`}>
+                          {feature.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                        {formatDuration(task.startTime, task.endTime, task.breakTime)}
-                      </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        <p>{task.project.title}</p>
+                        <span className={`px-2 py-1 rounded-full text-xs ${getPriorityBadgeColor(feature.priority)}`}>
+                          {feature.priority}
+                        </span>
+                      </td>
+                      
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        <p>{feature.user?.firstName || ""}</p>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                        {new Date(feature.createdAt).toLocaleDateString()}
                       </td>
 
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
-                        {task.startTime 
-                          ? new Date(task.startTime).toLocaleString()
-                          : '-'}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
-                        {task.endTime 
-                          ? new Date(task.endTime).toLocaleString()
-                          : '-'}
-                      </td>
+                      
+                      
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                         <div className="flex flex-col sm:flex-row gap-2">
                           
@@ -488,7 +432,7 @@ console.log(tasks)
                           </button>
                           <button className="text-indigo-600 hover:text-indigo-900 cursor-pointer">
                           <a 
-                              href={`/tasks/edit/${task._id}`}
+                              href={`/features/edit/${feature._id}`}
                             className="text-secondary rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                           >
                             <Edit className="w-5 h-5" />
@@ -497,7 +441,7 @@ console.log(tasks)
                           
                           <button 
                             className="text-red-600 hover:text-red-900 cursor-pointer"
-                            onClick={() => openDeleteModal(task)}
+                            onClick={() => handleDelete(feature._id)}
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
@@ -510,10 +454,10 @@ console.log(tasks)
                   <tr>
                     <td colSpan="7" className="px-6 py-8 text-center text-sm text-gray-500">
                       {isSearching 
-                        ? `No tasks found matching "${searchTerm}"`
+                        ? `No features found matching "${searchTerm}"`
                         : activeTab !== 'all'
-                          ? `No ${activeTab} tasks found`
-                          : "No tasks found"}
+                          ? `No ${activeTab} features found`
+                          : "No features found"}
                     </td>
                   </tr>
                 )}
@@ -522,10 +466,10 @@ console.log(tasks)
           </div>
 
           {/* Pagination */}
-          {displayedTasks.length > 0 && (
+          {displayedFeatures.length > 0 && (
             <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
               <div className="text-sm text-gray-700">
-                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, displayedTasks.length)} of {displayedTasks.length} entries
+                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, displayedFeatures.length)} of {displayedFeatures.length} entries
               </div>
 
               {/* Items per page selector */}
@@ -574,42 +518,8 @@ console.log(tasks)
         </>
       )}
       
-      {/* Delete Confirmation Modal */}
-      {deleteModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden animate-fadeIn">
-            <div className="bg-red-50 p-4 sm:p-6">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-red-100">
-                <FaExclamationTriangle className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-medium text-center text-gray-900 mb-2">Delete Task</h3>
-              <p className="text-sm text-center text-gray-500">
-                Are you sure you want to delete the task "{deleteModal.taskTitle}"? This action cannot be undone.
-              </p>
-            </div>
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row-reverse gap-2">
-              <button
-                type="button"
-                className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                onClick={() => handleDelete(deleteModal.taskId)}
-              >
-                Delete
-              </button>
-              <button
-                type="button"
-                className="w-full sm:w-auto px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onClick={() => setDeleteModal({ isOpen: false, taskId: null, taskTitle: '' })}
-              >
-                Cancel
-              </button>
-
-              
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-export default TaskList;
+export default FeatureList;

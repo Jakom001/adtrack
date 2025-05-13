@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTaskContext } from '../../context/TaskContext';
 import { FaSort, FaSortUp, FaSortDown, FaSearch, FaEdit, FaTrash, FaTimes, FaPlay, FaPause, FaExclamationTriangle } from 'react-icons/fa';
-import { Edit, Eye, Trash2 } from 'lucide-react';
+import { Edit, Eye, Trash2, Clock } from 'lucide-react';
 import { debounce } from 'lodash';
 
 const TaskList = () => {
@@ -14,7 +14,7 @@ const TaskList = () => {
     fetchTasks,
     updateTaskStatus
   } = useTaskContext();
-console.log(tasks)
+
   // State for the component
   const [displayedTasks, setDisplayedTasks] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,7 +123,7 @@ console.log(tasks)
     return `${hours}h ${minutes}m`;
   };
 
-   // Calculate total duration from all tasks
+  // Calculate total duration from all tasks
   const calculateTotalDailyDuration = (taskList) => {
     if (!taskList || taskList.length === 0) return { hours: 0, minutes: 0 };
 
@@ -187,6 +187,7 @@ console.log(tasks)
     }
     
     setDisplayedTasks(filteredTasks);
+    
     // Calculate total daily hours
     const totalTime = calculateTotalDailyDuration(tasks);
     setTotalDailyHours(totalTime);
@@ -282,6 +283,28 @@ console.log(tasks)
     <div className="p-5 bg-white rounded-lg shadow">
       <h2 className="text-xl font-semibold text-gray-800 mb-5">Tasks</h2>
       
+      {/* Daily Hours Summary */}
+      <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+        <div className="flex items-center">
+          <Clock className="h-6 w-6 text-blue-600 mr-2" />
+          <h3 className="text-lg font-medium text-blue-800">Daily Summary</h3>
+        </div>
+        <div className="mt-2 flex justify-between items-center">
+          <div>
+            <p className="text-sm text-gray-600">Total hours worked today:</p>
+            <p className="text-2xl font-bold text-blue-700">
+              {totalDailyHours.hours}h {totalDailyHours.minutes}m
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-600">Tasks completed:</p>
+            <p className="text-xl font-semibold text-green-600">
+              {getTaskCountByStatus('Completed')}
+              <span className="text-gray-400 text-sm font-normal"> / {getTaskCountByStatus('all')}</span>
+            </p>
+          </div>
+        </div>
+      </div>
       
       {/* Search and Add New Task button */}
       <div className="flex flex-col sm:flex-row items-center justify-between mb-5 gap-4">
@@ -291,12 +314,7 @@ console.log(tasks)
         >
           Add New Task
         </a>
-        <div>
-            <p className="text-sm text-gray-600">Total hours worked today:</p>
-            <p className="text-2xl font-bold text-primary">
-              {totalDailyHours.hours}h {totalDailyHours.minutes}m
-            </p>
-          </div>
+        
         <div className="relative w-full sm:w-auto max-w-md">
           <div className="flex items-center">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -479,8 +497,6 @@ console.log(tasks)
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
                         <div className="flex flex-col sm:flex-row gap-2">
-                          
-
                           <button 
                             className="text-primary hover:text-green-700 cursor-pointer"
                           >
@@ -501,7 +517,6 @@ console.log(tasks)
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
-
                         </div>
                       </td>
                     </tr>
@@ -602,8 +617,6 @@ console.log(tasks)
               >
                 Cancel
               </button>
-
-              
             </div>
           </div>
         </div>

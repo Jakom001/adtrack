@@ -1,7 +1,8 @@
 import React, {useState, useEffect, useRef} from 'react';
 import { useAuthContext } from '../../context/AuthContext'
 import {Link} from 'react-router-dom'
-import { LogOut, Moon, Sun, Sunrise, Sunset, SwitchCamera } from 'lucide-react';
+import { ArrowRightIcon, CalendarClock, LogOut, Moon, Settings, Sun, Sunrise, Sunset, SwitchCamera } from 'lucide-react';
+import Clock from '../common/Clock';
 
 const Navbar = () => {
   const { isAuthenticated, logout, currentUser } = useAuthContext();
@@ -59,7 +60,7 @@ const Navbar = () => {
         {greetingText()} {currentUser?.firstName || 'User'}
         </h1>
       )}
-      
+      {<Clock/>}
       <nav className='p-4'>
         <div className='flex gap-4 items-center'>
          
@@ -97,16 +98,20 @@ const Navbar = () => {
                     <SwitchCamera /> Switch Accounts
                   </Link>
                   <Link to="#" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
-                    <SwitchCamera /> Manage Accounts
+                    <Settings /> Settings
                   </Link>
                   <div className="my-4 border-b border-gray-300 w-full"></div>
                   <Link to="#" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
                     <SwitchCamera /> Todos
                   </Link>
                   
-                  <Link to="#" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
-                    <SwitchCamera /> Today
+                  <Link to="/tasks" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
+                    <CalendarClock /> Today
                   </Link>
+                  <Link to="/features" className="flex items-center gap-2 py-2 px-2 rounded-xl hover:bg-grayColor">
+                    <ArrowRightIcon /> Features & Bug Report
+                  </Link>
+                  
                   <div className="my-4 border-b border-gray-300 w-full"></div>
                   <button 
                     onClick={handleLogout} 
