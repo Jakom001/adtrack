@@ -4,7 +4,6 @@ const featureSchema = new mongoose.Schema({
     name :{
         type: String,
         trim: true,
-        lowercase:true,
         required : [true,'name is Required']
     },
     type: {
@@ -33,7 +32,7 @@ const featureSchema = new mongoose.Schema({
     user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Auth',
-            required: true
+            required: true,
         },
 },{
     timestamps: true

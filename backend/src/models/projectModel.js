@@ -12,10 +12,9 @@ const projectSchema = new mongoose.Schema({
         unique: true,
         trim: true,
     },
-    isActive:{
-            type:Boolean,
-            enum: ['active', 'inActive'],
-            default: "active"
+    active:{
+        type: Boolean,
+        default: true,
     },
     description: {
         type: String,

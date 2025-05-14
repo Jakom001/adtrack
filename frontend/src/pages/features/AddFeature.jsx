@@ -22,7 +22,9 @@ const AddFeature= () => {
     if (!formData.name || !formData.name.trim()) {
       newErrors.name = "Name is required";
     }
-    
+    if (!formData.type) {
+      newErrors.type = "Type is required";
+    }
     if (!formData.description || !formData.description.trim()) {
       newErrors.description = "Description is required";
     }
@@ -154,6 +156,28 @@ const AddFeature= () => {
               )}
             </div>
               </div>
+
+              <div className="mb-8 flex flex-col">
+              <label className="text-left text-sm font-medium text-gray-700 mb-4">
+                Description<span className='text-red-500 font-bold'>*</span>
+              </label>
+              <textarea
+                className={`w-full px-3 py-2 border ${
+                  formErrors.description ? 'border-red-500' : 'border-gray-300'
+                } rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary`}
+                id="description"
+                rows="4"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Enter feature description"
+              />
+              {formErrors.description && (
+                <div className="text-left text-red-500 text-xs mt-1">
+                  {formErrors.description}
+                </div>
+              )}
+            </div>
             
 
              <div className="mb-8 flex flex-col">
@@ -179,20 +203,7 @@ const AddFeature= () => {
             </div>
 
            
-            <div className="mb-8 flex flex-col">
-              <label className="text-left text-sm font-medium text-gray-700 mb-4">
-                Description
-              </label>
-              <textarea 
-                name="description"
-                value={formData.description}
-                onChange={handleChange} 
-                id="description"
-                rows="4"
-                placeholder="Enter featuredescription"
-                className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
-              />
-            </div>
+            
 
             <div className="flex justify-between">
               <button
